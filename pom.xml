@@ -51,7 +51,7 @@
     	<artifactId>antlr4</artifactId>
     	<version>4.6</version>
 	</dependency>
-     <!-- For JUnit5 tests -->
+    <!-- For JUnit5 tests -->
   	<dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter-api</artifactId>
@@ -75,7 +75,4 @@
   <properties>
 	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
-  <scm>
-  	<url>https://github.com/mykhailo-saienko/ipp</url>
-  </scm>
 </project>
