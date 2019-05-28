@@ -4,24 +4,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
-public class Primitive<T> extends Var {
+public class Primitive<T> extends Var<T> {
 	private T value;
-	private final LXClass<T> type;
 
-	public static Var create(String name, Object value, boolean isConst) {
-		Primitive<?> prim = new Primitive<>(name, value, isConst);
-		Var.process(prim, LXClass.getType(value));
-		return prim;
-	}
-
-	private Primitive(String name, T val, boolean isConst) {
-		super(name);
+	public Primitive(String name, T val, boolean isConst) {
+		super(name, LXClass.getType(val), null);
 		setValue(val); // don't use Var::set because Primitive may be const
-
-		type = LXClass.getType(val);
-		addGetter(type, this::getValue);
+		setGetter(this::getValue);
 		if (!isConst) {
-			addSetter(type, this::setValue);
+			setSetter(this::setValue);
 		}
 	}
 
@@ -30,11 +21,8 @@ public class Primitive<T> extends Var {
 		return getName() == null ? new ArrayList<>() : Arrays.asList(getName());
 	}
 
-	public LXClass<T> getType() {
-		return type;
-	}
-
-	protected T getValue() {
+	@Override
+	public T getValue() {
 		return value;
 	}
 
@@ -48,6 +36,6 @@ public class Primitive<T> extends Var {
 
 	@Override
 	public String toString() {
-		return type + " " + super.toString() + "=" + value;
+		return getType() + " " + super.toString() + "=" + value;
 	}
 }

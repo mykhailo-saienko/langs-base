@@ -1,6 +1,6 @@
 package ms.lang.types;
 
-public interface Instance extends Ref<Object> {
+public interface Instance<T> extends Ref<T> {
 	// TODO: Maybe IType getType(). By the time, a Ref is created, its type
 	// must exist, too. But, it is time-consuming to create Types, which is
 	// important, since Refs are created recursively in JavaRef/PythonRef

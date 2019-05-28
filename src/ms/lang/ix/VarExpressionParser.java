@@ -21,26 +21,26 @@ import ms.lang.ix.gen.ExpressionParser.PrimaryContext;
 import ms.parser.Container;
 import ms.utils.NumberHelper;
 
-public class VarExpressionParser extends ExpressionBaseVisitor<Var> {
+public class VarExpressionParser extends ExpressionBaseVisitor<Var<?>> {
 	private static final Logger logger = LogManager.getLogger();
 
-	private final Container<Var, LXClass<?>> parser;
+	private final Container<Var<?>, LXClass<?>> parser;
 	private final Set<String> ids;
 
-	public VarExpressionParser(Container<Var, LXClass<?>> parser) {
+	public VarExpressionParser(Container<Var<?>, LXClass<?>> parser) {
 		this.parser = parser;
 		ids = new HashSet<>();
 	}
 
-	public ArrayList<Var> processBlock(BlockContext ctx) {
-		logger.trace("Parsing block {}", () -> ctx.getText());
-		ArrayList<Var> statements = new ArrayList<>();
+	public ArrayList<Var<?>> processBlock(BlockContext ctx) {
+		logger.trace("Parsing block {}", ctx::getText);
+		ArrayList<Var<?>> statements = new ArrayList<>();
 		forEach(ctx.expression(), e -> statements.add(visitExpression(e)));
 		return statements;
 	}
 
 	@Override
-	public Var visitExpression(ExpressionContext ctx) {
+	public Var<?> visitExpression(ExpressionContext ctx) {
 		if (ctx.primary() != null) {
 			return visitPrimary(ctx.primary());
 		} else if (ctx.memOp() != null) {
@@ -56,7 +56,7 @@ public class VarExpressionParser extends ExpressionBaseVisitor<Var> {
 	}
 
 	@Override
-	public Var visitPrimary(PrimaryContext ctx) {
+	public Var<?> visitPrimary(PrimaryContext ctx) {
 		if (ctx.expression() != null) {
 			return visitExpression(ctx.expression());
 		} else if (ctx.idOrMethod() != null) {
@@ -73,11 +73,11 @@ public class VarExpressionParser extends ExpressionBaseVisitor<Var> {
 		return null;
 	}
 
-	private Var createRoot(IdOrMethodContext ctx) {
+	private Var<?> createRoot(IdOrMethodContext ctx) {
 		String id = ctx.Identifier().getText();
 		if (ctx.funcOp() != null) {
 			List<ExpressionContext> expr = ctx.expression();
-			logger.trace("Root call '{}' with args '{}'", () -> id, () -> map(expr, e -> e.getText()));
+			logger.trace("Root call '{}' with args '{}'", () -> id, () -> map(expr, ExpressionContext::getText));
 			return parser.parseCall(id, toVar(expr));
 		} else {
 			logger.trace("Root var '{}'", id);
@@ -86,12 +86,12 @@ public class VarExpressionParser extends ExpressionBaseVisitor<Var> {
 		}
 	}
 
-	private Var createMember(Var parent, IdOrMethodContext ctx) {
+	private Var<?> createMember(Var<?> parent, IdOrMethodContext ctx) {
 		String id = ctx.Identifier().getText();
 		if (ctx.funcOp() != null) {
 			List<ExpressionContext> expr = ctx.expression();
-			logger.trace("Member call '{}' with parent {} and args '{}'", () -> id, () -> parent.getName(),
-					() -> map(expr, e -> e.getText()));
+			logger.trace("Member call '{}' with parent {} and args '{}'", () -> id, parent::getName,
+					() -> map(expr, ExpressionContext::getText));
 			return parser.parseCall(parent, id, toVar(expr));
 		} else {
 			logger.trace("Member '{}' with parent {}", id, parent.getName());
@@ -99,12 +99,12 @@ public class VarExpressionParser extends ExpressionBaseVisitor<Var> {
 		}
 	}
 
-	private Var createFunc(String func, List<Var> params) {
+	private Var<?> createFunc(String func, List<Var<?>> params) {
 		logger.trace("Function/Operator '{}' with params {}", () -> func, () -> toText(params));
 		return parser.parseCall(func, params);
 	}
 
-	private Var createUnary(String unaryOp, Var param) {
+	private Var<?> createUnary(String unaryOp, Var<?> param) {
 		logger.trace("Unary '{}' with param {}", unaryOp, param.getName());
 
 		if ("+".equals(unaryOp)) {
@@ -115,7 +115,7 @@ public class VarExpressionParser extends ExpressionBaseVisitor<Var> {
 		if (unaryOp.length() == 2) {
 			// transform into "return var +=/-= 1"
 			String ass = unaryOp.substring(0, 1) + "=";
-			Var one = parser.parseConst(1);
+			Var<?> one = parser.parseConst(1);
 			return createAssign(ass, Arrays.asList(param, one));
 		}
 
@@ -123,11 +123,11 @@ public class VarExpressionParser extends ExpressionBaseVisitor<Var> {
 		return parser.parseCall("u" + unaryOp, Arrays.asList(param));
 	}
 
-	private Var createAssign(String assOp, List<Var> params) {
+	private Var<?> createAssign(String assOp, List<Var<?>> params) {
 		if (assOp.length() == 2) {
 			logger.trace("AssignMod '{}' with params {}", assOp.substring(0, 1), toText(params));
-			Var result = parser.parseCall(assOp.substring(0, 1), params);
-			List<Var> old = params;
+			Var<?> result = parser.parseCall(assOp.substring(0, 1), params);
+			List<Var<?>> old = params;
 			params = new ArrayList<>();
 			params.add(old.get(0));
 			params.add(result);
@@ -143,11 +143,11 @@ public class VarExpressionParser extends ExpressionBaseVisitor<Var> {
 		return (s == null) ? null : s.substring(1, s.length() - 1);
 	}
 
-	private List<Var> toVar(List<ExpressionContext> exprs) {
+	private List<Var<?>> toVar(List<ExpressionContext> exprs) {
 		return exprs.stream().map(e -> visitExpression(e)).collect(Collectors.toList());
 	}
 
-	private List<String> toText(List<Var> exprs) {
+	private List<String> toText(List<Var<?>> exprs) {
 		return exprs.stream().map(e -> e.getName()).collect(Collectors.toList());
 	}
 }

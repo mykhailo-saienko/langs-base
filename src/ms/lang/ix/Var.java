@@ -1,163 +1,117 @@
 package ms.lang.ix;
 
-import static java.math.BigDecimal.ROUND_HALF_UP;
-import static ms.lang.ix.LXClass.getType;
-import static ms.utils.NumberHelper.larger;
-
-import java.math.BigDecimal;
 import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import ms.ipp.iterable.tree.DelegatingTree;
 import ms.ipp.iterable.tree.StdMultiTree;
 import ms.ipp.iterable.tree.StdTree;
-import ms.utils.DateHelper;
-import ms.utils.NumberHelper;
+import ms.lang.types.Ref;
 import ms.vm.VMObserver;
 
-public class Var extends DelegatingTree<Object> {
-	private final Map<LXClass<?>, Supplier<?>> getters;
-	private final Map<LXClass<?>, Consumer<?>> setters;
+// TODO: Implement Instance<T> after migrating LXClass to Type(Name).
+public class Var<T> extends DelegatingTree<Object> implements Ref<T> {
+	private Supplier<T> getter;
+	private Consumer<T> setter;
+	private final LXClass<T> type;
 	private final Set<String> prims;
 	private final String name;
 
-	public static <T> VMObserver varObserver(Consumer<T> onVarChange, Var source, LXClass<T> type) {
-		if (!source.isConvertible(type)) {
-			throw new IllegalArgumentException(
-					"Expression '" + source.getName() + " is not convertible to type " + type);
-		}
-		return new VMObserver(() -> source.eval(type), onVarChange);
+	public static <U> VMObserver varObserver(Consumer<U> onVarChange, Var<U> source) {
+		return new VMObserver(source::getValue, onVarChange);
 	}
 
-	static Var createUnsafe(String name, Supplier<?> getter, LXClass<?> type, Collection<String> primitives) {
-		Var var = new Var(name);
-		var.addGetterUnsafe(type, getter);
+	public static <U> Var<U> createSafe(String name, Supplier<U> getter, LXClass<U> type,
+			Collection<String> primitives) {
+		Var<U> var = new Var<U>(name, type, getter);
 		var.addPrimitives(primitives);
-		process(var, type);
 		return var;
 	}
 
-	protected static String format(BigDecimal value) {
-		if (larger(value.abs(), 10000)) {
-			return NumberHelper.format(value.setScale(0, ROUND_HALF_UP));
-		}
-		return NumberHelper.format(value);
+	public static Var<?> createUnsafe(String name, Supplier<?> getter, LXClass<?> type, Collection<String> primitives) {
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		Var<?> var = new Var(name, type, getter);
+		var.addPrimitives(primitives);
+		return var;
 	}
 
-	protected static <T, U> U convert(Var var, LXClass<T> type, Function<T, U> converter) {
-		T value = var.eval(type);
-		return value == null ? null : converter.apply(value);
-	}
-
-	static void process(Var v, LXClass<?> type) {
-		LXClass<BigDecimal> nType = LXClass.NUM;
-		LXClass<Long> lType = LXClass.LONG;
-		LXClass<Integer> iType = LXClass.INT;
-		LXClass<Date> dType = LXClass.DATE;
-		LXClass<String> sType = LXClass.STRING;
-
-		if (type.equals(iType)) {
-			v.addGetter(nType, () -> convert(v, iType, NumberHelper::bd));
-			v.addGetter(lType, () -> convert(v, iType, i -> (long) i));
-			v.addGetter(sType, () -> convert(v, nType, Var::format));
-		} else if (type.equals(lType)) {
-			v.addGetter(nType, () -> convert(v, lType, NumberHelper::bd));
-			v.addGetter(iType, () -> convert(v, nType, d -> d.intValue()));
-			v.addGetter(sType, () -> convert(v, nType, Var::format));
-		} else if (type.equals(nType)) {
-			v.addGetter(iType, () -> convert(v, nType, d -> d.intValue()));
-			v.addGetter(lType, () -> convert(v, nType, d -> d.longValue()));
-			v.addGetter(sType, () -> convert(v, nType, Var::format));
-		} else if (type.equals(dType)) {
-			v.addGetter(lType, () -> convert(v, dType, d -> d.getTime()));
-			v.addGetter(nType, () -> convert(v, lType, NumberHelper::bd));
-			v.addGetter(iType, () -> convert(v, lType, Math::toIntExact));
-			v.addGetter(sType, () -> convert(v, dType, DateHelper::format));
-		} else if (!type.equals(sType)) {
-			v.addGetter(sType, () -> convert(v, type, o -> o.toString()));
-		}
-	}
-
-	public Var(String name) {
+	public Var(String name, LXClass<T> type, Supplier<T> getter) {
 		super(Object.class);
-		this.getters = new HashMap<>();
-		this.setters = new HashMap<>();
-		this.prims = new HashSet<>();
 		this.name = name;
-		initInfrastructure();
-	}
+		this.getter = getter;
+		this.type = type;
+		this.setter = null;
+		this.prims = new HashSet<>();
 
-	private void initInfrastructure() {
+		// init infrastructure
 		add(Var.class, new StdTree<>(Var.class));
 		add(FuncSpec.class, new StdMultiTree<>(FuncSpec.class));
 	}
 
-	public <T> void addSetter(LXClass<T> type, Consumer<T> setter) {
-		setters.put(type, setter);
-	}
-
-	public <T> void addGetter(LXClass<T> type, Supplier<T> getter) {
-		addGetterUnsafe(type, getter);
+	public LXClass<T> getType() {
+		return type;
 	}
 
 	public String getName() {
 		return name;
 	}
 
-	/**
-	 * This method is only used when the equality of types has been ensured
-	 * somewhere else.
-	 * 
-	 * @param type
-	 * @param getter
-	 */
-	private void addGetterUnsafe(LXClass<?> type, Supplier<?> getter) {
-		getters.put(type, getter);
+	public boolean canSet(LXClass<?> type) {
+		return this.type.getType().isAssignableFrom(type.getType());
 	}
 
-	public <T> boolean isConvertible(LXClass<T> type) {
-		return getters.containsKey(type);
+	public boolean isConvertible(LXClass<?> type) {
+		return type.getType().isAssignableFrom(this.type.getType());
 	}
 
-	@SuppressWarnings("unchecked")
-	public <T> T eval(LXClass<T> type) {
-		Supplier<T> getter = (Supplier<T>) getters.get(type);
+	public Supplier<T> getGetter() {
+		return getter;
+	}
+
+	@Override
+	public T getValue() {
 		if (getter == null) {
-			throw new IllegalArgumentException("Cannot convert variable '" + getName() + "' to type " + type);
+			throw new IllegalArgumentException("The variable has no getter");
 		}
 		return getter.get();
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> void set(T value) {
+	public T set(Object value) {
 		if (value == null) {
 			throw new IllegalArgumentException("Cannot set variable to null");
 		}
-		LXClass<T> type = getType(value);
-		Consumer<T> setter = (Consumer<T>) setters.get(type);
 		if (setter == null) {
-			throw new IllegalArgumentException("Cannot convert variable from value " + value + " of type " + type);
+			throw new IllegalArgumentException("This variable is constant");
 		}
-		setter.accept(value);
+		if (!canSet(LXClass.getType(value))) {
+			throw new IllegalArgumentException("Value '" + value + "' is not convertible to " + getType());
+		}
+		setter.accept((T) value);
+		return getValue();
 	}
 
 	public Collection<String> getPrimitives() {
 		return prims;
 	}
 
-	public void addPrimitives(Collection<String> prims) {
-		prims.stream().filter(s -> s != null).forEach(s -> this.prims.add(s));
-	}
-
 	@Override
 	public String toString() {
 		return getName();
+	}
+
+	protected void setSetter(Consumer<T> setter) {
+		this.setter = setter;
+	}
+
+	protected void setGetter(Supplier<T> getter) {
+		this.getter = getter;
+	}
+
+	private void addPrimitives(Collection<String> prims) {
+		prims.stream().filter(s -> s != null).forEach(this.prims::add);
 	}
 }

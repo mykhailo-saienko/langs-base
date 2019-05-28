@@ -47,7 +47,7 @@ public interface IType {
 
 	boolean isAssignableFrom(IType type);
 
-	Instance getTypeRef();
+	Instance<Object> getTypeRef();
 
 	default BaseMethod getStaticMethod(String name, String... params) {
 		return getMethod(name, m -> m.hasParamNames(asList(params)) && m.isStatic());

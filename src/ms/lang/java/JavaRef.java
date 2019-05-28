@@ -19,14 +19,14 @@ import ms.ipp.iterable.tree.path.StdPathManipulator;
 import ms.lang.types.Instance;
 import ms.lang.types.TypeName;
 
-public class JavaRef extends DelegatingTree<Instance> implements Instance {
+public class JavaRef extends DelegatingTree<Instance<Object>> implements Instance<Object> {
 
 	private final TypeName type;
 	private final Supplier<Object> getter;
 
 	// Java Class Ref
 	public JavaRef(Class<?> staticClass) {
-		super(Instance.class);
+		super((Class) Instance.class);
 		this.getter = () -> staticClass;
 		this.type = fromClass(Class.class);
 		create(null, staticClass, true);
@@ -34,7 +34,7 @@ public class JavaRef extends DelegatingTree<Instance> implements Instance {
 
 	/// Java Instance Ref
 	public JavaRef(Object instance, Type type) {
-		super(Instance.class);
+		super((Class) Instance.class);
 		this.getter = () -> instance;
 		this.type = fromReflectType(type);
 		create(instance, fromType(type), false);
@@ -51,26 +51,26 @@ public class JavaRef extends DelegatingTree<Instance> implements Instance {
 	}
 
 	private void create(Object instObj, Class<?> instClass, boolean onlyStatic) {
-		Iterable<Field> fit = toIterable(() -> array(new ClassIterator(instClass), c -> c.getDeclaredFields()));
+		Iterable<Field> fit = toIterable(() -> array(new ClassIterator(instClass), Class::getDeclaredFields));
 		Function<String, Field> retriever = s -> first(fit, f -> f.getName().equals(s));
-		Function<Field, String> idRetriever = f -> f.getName();
-		Function<Field, Instance> converter = f -> new JavaRef(getValue(instObj, f), f.getGenericType());
-		BiConsumer<Field, Instance> setter = (f, o) -> setValue(instObj, f, o.getValue());
+		Function<Field, String> idRetriever = Field::getName;
+		Function<Field, Instance<Object>> converter = f -> new JavaRef(getValue(instObj, f), f.getGenericType());
+		BiConsumer<Field, Instance<Object>> setter = (f, o) -> setValue(instObj, f, o.getValue());
 
-		Iterable<Class<?>> fit1 = toIterable(() -> array(new ClassIterator(instClass), c -> c.getDeclaredClasses()));
+		Iterable<Class<?>> fit1 = toIterable(() -> array(new ClassIterator(instClass), Class::getDeclaredClasses));
 		Function<String, Class<?>> retriever1 = s -> first(fit1, c -> c.getName().equals(s));
 		Function<Class<?>, String> idRetriever1 = c -> c.getSimpleName();
-		Function<Class<?>, Instance> converter1 = c -> new JavaRef(c);
-		BiConsumer<Class<?>, Instance> setter1 = (c,
+		Function<Class<?>, Instance<Object>> converter1 = JavaRef::new;
+		BiConsumer<Class<?>, Instance<Object>> setter1 = (c,
 				o) -> error("Cannot set nested member class " + c.getCanonicalName());
 
-		SyntheticTree<Instance> memberEntity = new SyntheticTree<>(converter, setter, idRetriever, retriever, fit,
-				Instance.class);
+		SyntheticTree<Instance<Object>> memberEntity = new SyntheticTree<>(converter, setter, idRetriever, retriever,
+				fit, (Class) Instance.class);
 		memberEntity.setDeleter(s -> error(
 				"Cannot delete member '" + s + "' in instance of type '" + instClass.getCanonicalName() + "'"));
 
-		SyntheticTree<Instance> typeEntity = new SyntheticTree<>(converter1, setter1, idRetriever1, retriever1, fit1,
-				Instance.class);
+		SyntheticTree<Instance<Object>> typeEntity = new SyntheticTree<>(converter1, setter1, idRetriever1, retriever1,
+				fit1, (Class) Instance.class);
 		typeEntity.setDeleter(
 				s -> error("Cannot delete nested class '" + s + "' in '" + instClass.getCanonicalName() + "'"));
 

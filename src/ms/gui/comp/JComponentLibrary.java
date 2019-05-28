@@ -5,7 +5,6 @@ import static ms.gui.comp.GUIHelper.loadResImage;
 import static ms.gui.comp.GUIHelper.runInJAWT;
 import static ms.ipp.Iterables.get;
 import static ms.ipp.Iterables.ifExistsDo;
-import static ms.lang.ix.LXClass.STRING;
 import static ms.utils.NumberHelper.bd;
 
 import java.awt.Color;
@@ -172,7 +171,7 @@ public class JComponentLibrary {
 		ifExistsDo(DECORATED_NAME, attrs, (Boolean b) -> button.setDecorated(b));
 		ifExistsDo(FOCUSABLE_NAME, attrs, (Boolean b) -> button.setFocusPainted(b));
 
-		Consumer<Var> cons = v -> button.addActionListener(e -> GUIHelper.runInJAWT(() -> v.eval(STRING)));
+		Consumer<Var<?>> cons = v -> button.addActionListener(e -> GUIHelper.runInJAWT(() -> v.getValue()));
 		ifExistsDo(ACTION_NAME, attrs, cons);
 		return button;
 	}
@@ -322,7 +321,7 @@ public class JComponentLibrary {
 		ifExistsDo(SIZE_NAME, attrs, ignore, (List<Integer> i) -> c.setSize(i.get(0), i.get(1)));
 		ifExistsDo(LOCATION_NAME, attrs, ignore, (List<Integer> i) -> c.setLocation(i.get(0), i.get(1)));
 
-		ifExistsDo(ONKEY_NAME, attrs, ignore, (Map<String, Var> m) -> m.forEach((k, v) -> setBinding(c, k, v)));
+		ifExistsDo(ONKEY_NAME, attrs, ignore, (Map<String, Var<?>> m) -> m.forEach((k, v) -> setBinding(c, k, v)));
 		ifExistsDo(BACKGROUND_NAME, attrs, ignore, (Color c1) -> c.setBackground(c1));
 		ifExistsDo(FOREGROUND_NAME, attrs, ignore, (Color c1) -> c.setForeground(c1));
 		ifExistsDo(BORDER_NAME, attrs, ignore, (Border b) -> c.setBorder(b));
@@ -331,13 +330,13 @@ public class JComponentLibrary {
 		ifExistsDo(VISIBLE_NAME, attrs, ignore, (Boolean b) -> c.setVisible(b));
 	}
 
-	private static void setBinding(JComponent comp, String key, Var code) {
+	private static void setBinding(JComponent comp, String key, Var<?> code) {
 		Action a = new AbstractAction() {
 			private static final long serialVersionUID = -1221076732554940398L;
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				runInJAWT(() -> code.eval(STRING));
+				runInJAWT(() -> code.getValue());
 			}
 		};
 		String actionName = key.toLowerCase();
