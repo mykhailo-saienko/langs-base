@@ -22,14 +22,6 @@ public class NumberHelper {
 
 	public static BigDecimal ZERO_PRICE = BigDecimal.ZERO.setScale(2);
 
-	public static void temp(Integer i) {
-		System.out.println("Integer: " + i);
-	}
-
-	public static void temp(boolean i) {
-		System.out.println("boolean: " + i);
-	}
-
 	public static int log2floor(int n) {
 		if (n <= 0)
 			throw new IllegalArgumentException();
