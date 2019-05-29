@@ -1,5 +1,7 @@
 package ms.parser;
 
+import static ms.ipp.Iterables.appendList;
+
 import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.function.Function;
@@ -45,7 +47,7 @@ public class ParserHelper {
 				result = constructor.newInstance(message, errors);
 			} else {
 				Constructor<T> constructor = wrapper.getConstructor(String.class);
-				result = constructor.newInstance(message);
+				result = constructor.newInstance(message + ":\n" + appendList(errors, "", "", "\n", Object::toString));
 			}
 		} catch (Exception e1) {
 			logger.fatal("Unexpected error while instantiating a constructor for " + wrapper.getName()
