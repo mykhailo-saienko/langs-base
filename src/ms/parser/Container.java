@@ -3,12 +3,19 @@ package ms.parser;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 
+ * @author mykhailo.saienko
+ * 
+ * @param <V> Variable class
+ * @param <T> Type class
+ */
 public interface Container<V, T> {
 
 	/**
-	 * Returns a parsed expression representing a call to a function with a
-	 * given list of expressions as arguments. Binary operator calls should be
-	 * parsed by this method, too, by their direct names: +=, +, etc.
+	 * Returns a parsed expression representing a call to a function with a given
+	 * list of expressions as arguments. Binary operator calls should be parsed by
+	 * this method, too, by their direct names: +=, +, etc.
 	 * 
 	 * 
 	 * @param name
