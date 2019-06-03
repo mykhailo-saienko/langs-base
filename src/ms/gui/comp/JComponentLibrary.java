@@ -3,6 +3,7 @@ package ms.gui.comp;
 import static java.util.Arrays.asList;
 import static ms.gui.comp.GUIHelper.loadResImage;
 import static ms.gui.comp.GUIHelper.runInJAWT;
+import static ms.ipp.Iterables.appendList;
 import static ms.ipp.Iterables.get;
 import static ms.ipp.Iterables.ifExistsDo;
 import static ms.utils.NumberHelper.bd;
@@ -15,6 +16,7 @@ import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,18 +38,24 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 import javax.swing.border.Border;
-import javax.swing.border.LineBorder;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import ms.gui.Attribute;
 import ms.gui.GUIFactory;
 import ms.ipp.Iterables;
 import ms.ipp.base.KeyValue;
+import ms.lang.ix.Enumeration;
+import ms.lang.ix.LXClass;
 import ms.lang.ix.Var;
 import ms.utils.StringHelper;
 
 public class JComponentLibrary {
+
+	public static interface AttributeParser {
+		Object parse(String tag, String name, String value);
+	}
 
 	public static final Logger logger = LogManager.getLogger();
 
@@ -111,8 +119,21 @@ public class JComponentLibrary {
 	public static final String VISIBLE_NAME = "visible";
 	public static final String TRANSPARENCY_NAME = "transparency";
 
-	public static final String CHILDREN_NAME = "children";
+	public static final String CONSTRAINT_TAG = "c";
+	public static final String VAR_TAG = "var";
 
+	public static final String GBC_TYPE = "gbc";// GridBagConstraint
+	public static final String TAB_TYPE = "tab"; // JTabbedPane
+
+	// for grid bag constraints.
+	public static final String POS_NAME = "pos";
+	public static final String WEIGHT_NAME = "weight";
+	public static final String IPADS_NAME = "ipads";
+	public static final String INSETS_NAME = "insets";
+
+	public static final String TYPE_NAME = "type";
+
+	public static final String CHILDREN_NAME = "children";
 	public static final String DEFERRED_ATTR = "deferred";
 
 	public static void registerJComponents(GUIFactory<JComponent> factory) {
@@ -200,9 +221,8 @@ public class JComponentLibrary {
 	public static LXHint createHint(Map<String, Object> attrs) {
 		Map<String, Object> arrowAttrs = new HashMap<>();
 		StringHelper.filterPrefix(ARROW_SUBTAG, attrs, arrowAttrs, null);
-		if (logger.isTraceEnabled()) {
-			logger.trace("Creating hint with attributes {}\nArrow attrs are {}", attrs, arrowAttrs);
-		}
+		logger.trace("Creating hint with attributes {}\nArrow attrs are {}", attrs, arrowAttrs);
+
 		LXHint hint = new LXHint();
 		// the panel remains transparent and the label is drawn around it.
 		processComponent(hint, attrs, asList(BORDER_NAME, OPAQUE_NAME));
@@ -212,8 +232,8 @@ public class JComponentLibrary {
 		ifExistsDo(SIZE_NAME, arrowAttrs,
 				(List<Integer> d) -> hint.setArrowDim(side, new Dimension(d.get(0), d.get(1))));
 		ifExistsDo(OFFSET_NAME, arrowAttrs, (BigDecimal f) -> hint.setArrowPos(side, f.floatValue()));
-		ifExistsDo(BORDER_NAME, attrs, (Border b) -> hint.setLineBorder((LineBorder) b));
-		ifExistsDo(ROUNDNESS_NAME, attrs, (Integer i) -> hint.setRadius(i));
+		ifExistsDo(BORDER_NAME, attrs, hint::setLineBorder);
+		ifExistsDo(ROUNDNESS_NAME, attrs, hint::setRadius);
 		ifExistsDo(ELLIPTICITY_NAME, attrs, (List<Integer> i) -> hint.setRadii(i.get(0), i.get(1)));
 		return hint;
 	}
@@ -402,4 +422,40 @@ public class JComponentLibrary {
 		return MODEL_NAME.equals(StringHelper.essential(name));
 	}
 
+	public static void throwAttr(String name, String value, String format) {
+		throw new IllegalArgumentException(
+				"Malformed '" + name + "'-attribute " + value + ", expected '" + format + "'");
+	}
+
+	public static void validate(String name, Attribute attr, Collection<String> expValues, int expNrParams,
+			String expFormat) {
+		if (attr == null) {
+			throw new IllegalArgumentException("Attribute '" + name + "' is null.");
+		}
+		if ((expValues != null && !expValues.contains(attr.getValue())) //
+				|| attr.getParams().size() != expNrParams) {
+			throwAttr(name, attr.toString(), expFormat);
+		}
+	}
+
+	public static void validate(String name, Attribute attr, String expValue, int expNrParams, String expFormat) {
+		List<String> allowedOption = expValue == null ? null : asList(expValue);
+		validate(name, attr, allowedOption, expNrParams, expFormat);
+	}
+
+	public static String getFormat(Enumeration enums) {
+		StringBuffer sb = new StringBuffer(500);
+		appendList(sb, enums.toMap().keySet(), "[", "]", " | ", (s, b) -> b.append(s));
+		return sb.toString();
+	}
+
+	public static String getFormat(LXClass<?> type, int size) {
+		List<String> types = new ArrayList<>(size);
+		for (int i = 0; i < size; ++i) {
+			types.add(type.toString());
+		}
+		StringBuffer sb = new StringBuffer(500);
+		appendList(sb, types);
+		return sb.toString();
+	}
 }

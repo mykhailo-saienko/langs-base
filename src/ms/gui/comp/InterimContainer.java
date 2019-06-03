@@ -3,21 +3,21 @@ package ms.gui.comp;
 import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.JComponent;
 
 import ms.ipp.base.KeyValue;
+import ms.utils.Options;
 
 public class InterimContainer extends JComponent {
 	private static final long serialVersionUID = 7949017577830045144L;
 
 	// Key is the component, Value are optional constraints.
 	private final List<KeyValue<JComponent, Object>> children;
-	private final Map<String, Object> attrs;
+	private final Options<Object> attrs;
 	private final String tag;
 
-	public InterimContainer(String tag, Map<String, Object> attrs) {
+	public InterimContainer(String tag, Options<Object> attrs) {
 		this.tag = tag;
 		this.attrs = attrs;
 		children = new ArrayList<>();
@@ -33,7 +33,7 @@ public class InterimContainer extends JComponent {
 		}
 	}
 
-	public Map<String, Object> getAttributes() {
+	public Options<Object> getAttributes() {
 		return attrs;
 	}
 

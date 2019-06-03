@@ -1,43 +1,40 @@
 package ms.gui;
 
 import static ms.ipp.Algorithms.concatF;
-import static ms.ipp.Iterables.getInsert;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import ms.ipp.Iterables;
+import ms.utils.Options;
 
 public class GUIFactory<T> {
 	private static final Logger logger = LogManager.getLogger();
 
 	public static interface GUIProducer<T> {
-		public static <U> GUIProducer<U> nullProducer(Consumer<Map<String, Object>> cons) {
+		public static <U, V> GUIProducer<U> nullProducer(Consumer<Options<Object>> cons) {
 			return concatF(cons, t -> (U) null)::apply;
 		}
 
-		T create(Map<String, Object> options);
+		T create(Options<Object> options);
 	}
 
-	private final Map<String, GUIProducer<T>> producers;
-	private final Map<String, Set<String>> attributes;
+	private final Options<GUIProducer<T>> producers;
+	private final Options<Set<String>> attributes;
 
 	public GUIFactory() {
-		producers = new HashMap<>();
-		attributes = new HashMap<>();
+		producers = new Options<>();
+		attributes = new Options<>();
 	}
 
 	public void register(String tag, GUIProducer<T> producer, String... attrs) {
 		producers.put(tag, producer);
 		// register tag as possessing all given attributes.
 		for (String attr : attrs) {
-			getInsert(attr, attributes, HashSet::new).add(tag);
+			attributes.getInsert(attr, HashSet::new).add(tag);
 		}
 	}
 
@@ -50,7 +47,7 @@ public class GUIFactory<T> {
 	 * @param attrs
 	 * @return A generated component (may be null).
 	 */
-	public T create(String tag, Map<String, Object> attrs, boolean errorOnUnknown) {
+	public T create(String tag, Options<Object> attrs, boolean errorOnUnknown) {
 		logger.trace("Creating element '{}' with attributes {}", tag, attrs);
 		GUIProducer<T> producer = producers.get(tag);
 		if (producer != null) {
@@ -66,6 +63,6 @@ public class GUIFactory<T> {
 	}
 
 	public boolean hasAttr(String tag, String attr) {
-		return Iterables.get(attr, attributes, HashSet::new).contains(tag);
+		return attributes.tryGet(attr, HashSet<String>::new).contains(tag);
 	}
 }
