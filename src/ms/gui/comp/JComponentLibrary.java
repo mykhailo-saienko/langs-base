@@ -1,6 +1,7 @@
 package ms.gui.comp;
 
 import static java.util.Arrays.asList;
+import static ms.gui.GUIFactory.GUIDeferredProducer.noParent;
 import static ms.gui.comp.GUIHelper.loadResImage;
 import static ms.gui.comp.GUIHelper.runInJAWT;
 import static ms.ipp.Iterables.appendList;
@@ -21,7 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -44,7 +44,6 @@ import org.apache.logging.log4j.Logger;
 
 import ms.gui.Attribute;
 import ms.gui.GUIFactory;
-import ms.ipp.Iterables;
 import ms.ipp.base.KeyValue;
 import ms.lang.ix.Enumeration;
 import ms.lang.ix.LXClass;
@@ -134,7 +133,6 @@ public class JComponentLibrary {
 	public static final String TYPE_NAME = "type";
 
 	public static final String CHILDREN_NAME = "children";
-	public static final String DEFERRED_ATTR = "deferred";
 
 	public static void registerJComponents(GUIFactory<JComponent> factory) {
 		factory.register(PANEL_TAG, JComponentLibrary::createPanel);
@@ -144,11 +142,10 @@ public class JComponentLibrary {
 		factory.register(TEXTFIELD_TAG, JComponentLibrary::createTextField);
 		factory.register(HINT_TAG, JComponentLibrary::createHint);
 
-		Function<Map<String, Object>, List<KeyValue<JComponent, Object>>> getChildren = a -> Iterables
-				.remove(CHILDREN_NAME, a, ArrayList::new);
-		factory.register(MULTILAYER_TAG, a -> createMultilayer(getChildren.apply(a), a), DEFERRED_ATTR);
-		factory.register(OVERLAY_TAG, a -> createLayered(getChildren.apply(a), a), DEFERRED_ATTR);
-		factory.register(TABBEDPANE_TAG, a -> createTabbedPane(getChildren.apply(a), a), DEFERRED_ATTR);
+		// post-creators
+		factory.register(MULTILAYER_TAG, noParent(JComponentLibrary::createMultilayer));
+		factory.register(OVERLAY_TAG, noParent(JComponentLibrary::createLayered));
+		factory.register(TABBEDPANE_TAG, noParent(JComponentLibrary::createTabbedPane));
 	}
 
 	public static TitledPanel createTitledPanel(Map<String, Object> attrs) {
@@ -245,8 +242,8 @@ public class JComponentLibrary {
 		return label;
 	}
 
-	private static JLayeredPane createMultilayer(List<KeyValue<JComponent, Object>> children,
-			Map<String, Object> attrs) {
+	private static JLayeredPane createMultilayer(Map<String, Object> attrs,
+			List<KeyValue<JComponent, Object>> children) {
 		JLayeredPane pane = new LXLayeredPane();
 		processComponent(pane, attrs);
 		processPanel(pane, attrs);
@@ -264,8 +261,8 @@ public class JComponentLibrary {
 		return pane;
 	}
 
-	private static JLayer<JComponent> createLayered(List<KeyValue<JComponent, Object>> children,
-			Map<String, Object> attrs) {
+	private static JLayer<JComponent> createLayered(Map<String, Object> attrs,
+			List<KeyValue<JComponent, Object>> children) {
 		if (children.size() != 1) {
 			throw new IllegalArgumentException(
 					"Cannot create overlay with children " + children + ". Exactly one child is allowed");
@@ -278,7 +275,7 @@ public class JComponentLibrary {
 		return jlayer;
 	}
 
-	public static JTabbedPane createTabbedPane(List<KeyValue<JComponent, Object>> children, Map<String, Object> attrs) {
+	public static JTabbedPane createTabbedPane(Map<String, Object> attrs, List<KeyValue<JComponent, Object>> children) {
 		JTabbedPane pane = new JTabbedPane();
 		processComponent(pane, attrs);
 		ifExistsDo(TABPLACEMENT_NAME, attrs, (Integer i) -> pane.setTabPlacement(i));

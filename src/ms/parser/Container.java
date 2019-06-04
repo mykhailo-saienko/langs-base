@@ -44,7 +44,7 @@ public interface Container<V, T> {
 
 	V getVar(V parent, String name);
 
-	void declareVar(String name, String value, String type, Map<String, String> attrs);
+	void declareVar(String name, String value, String type, Map<String, Object> attrs);
 
 	T getType(String name);
 }
