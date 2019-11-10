@@ -1,10 +1,9 @@
 package ms.gui.comp;
 
 import static java.util.Arrays.asList;
-import static ms.gui.GUIFactory.GUIDeferredProducer.noParent;
+import static ms.gui.StdFactory.DeferredProducer.noParent;
 import static ms.gui.comp.GUIHelper.loadResImage;
 import static ms.gui.comp.GUIHelper.runInJAWT;
-import static ms.ipp.Iterables.appendList;
 import static ms.ipp.Iterables.get;
 import static ms.ipp.Iterables.ifExistsDo;
 import static ms.utils.NumberHelper.bd;
@@ -17,7 +16,6 @@ import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,20 +40,12 @@ import javax.swing.border.Border;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import ms.gui.Attribute;
-import ms.gui.GUIFactory;
+import ms.gui.StdFactory;
 import ms.ipp.base.KeyValue;
-import ms.lang.ix.Enumeration;
-import ms.lang.ix.LXClass;
 import ms.lang.ix.Var;
 import ms.utils.StringHelper;
 
 public class JComponentLibrary {
-
-	public static interface AttributeParser {
-		Object parse(String tag, String name, String value);
-	}
-
 	public static final Logger logger = LogManager.getLogger();
 
 	public static final String BUTTON_TAG = "button";
@@ -134,7 +124,7 @@ public class JComponentLibrary {
 
 	public static final String CHILDREN_NAME = "children";
 
-	public static void registerJComponents(GUIFactory<JComponent> factory) {
+	public static void registerJComponents(StdFactory<JComponent> factory) {
 		factory.register(PANEL_TAG, JComponentLibrary::createPanel);
 		factory.register(TITLEDPANEL_TAG, JComponentLibrary::createTitledPanel);
 		factory.register(LABEL_TAG, JComponentLibrary::createLabel);
@@ -417,42 +407,5 @@ public class JComponentLibrary {
 
 	public static boolean isDescriptor(String tag, String name) {
 		return MODEL_NAME.equals(StringHelper.essential(name));
-	}
-
-	public static void throwAttr(String name, String value, String format) {
-		throw new IllegalArgumentException(
-				"Malformed '" + name + "'-attribute " + value + ", expected '" + format + "'");
-	}
-
-	public static void validate(String name, Attribute attr, Collection<String> expValues, int expNrParams,
-			String expFormat) {
-		if (attr == null) {
-			throw new IllegalArgumentException("Attribute '" + name + "' is null.");
-		}
-		if ((expValues != null && !expValues.contains(attr.getValue())) //
-				|| attr.getParams().size() != expNrParams) {
-			throwAttr(name, attr.toString(), expFormat);
-		}
-	}
-
-	public static void validate(String name, Attribute attr, String expValue, int expNrParams, String expFormat) {
-		List<String> allowedOption = expValue == null ? null : asList(expValue);
-		validate(name, attr, allowedOption, expNrParams, expFormat);
-	}
-
-	public static String getFormat(Enumeration enums) {
-		StringBuffer sb = new StringBuffer(500);
-		appendList(sb, enums.toMap().keySet(), "[", "]", " | ", (s, b) -> b.append(s));
-		return sb.toString();
-	}
-
-	public static String getFormat(LXClass<?> type, int size) {
-		List<String> types = new ArrayList<>(size);
-		for (int i = 0; i < size; ++i) {
-			types.add(type.toString());
-		}
-		StringBuffer sb = new StringBuffer(500);
-		appendList(sb, types);
-		return sb.toString();
 	}
 }

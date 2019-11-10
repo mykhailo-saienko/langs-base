@@ -1,4 +1,4 @@
-package ms.gui.comp;
+package ms.gui;
 
 import java.awt.Component;
 import java.util.ArrayList;
@@ -7,19 +7,14 @@ import java.util.List;
 import javax.swing.JComponent;
 
 import ms.ipp.base.KeyValue;
-import ms.utils.Options;
 
-public class InterimContainer extends JComponent {
+public class InterimContainer extends JComponent implements Deferred<JComponent> {
 	private static final long serialVersionUID = 7949017577830045144L;
 
 	// Key is the component, Value are optional constraints.
 	private final List<KeyValue<JComponent, Object>> children;
-	private final Options<Object> attrs;
-	private final String tag;
 
-	public InterimContainer(String tag, Options<Object> attrs) {
-		this.tag = tag;
-		this.attrs = attrs;
+	public InterimContainer() {
 		children = new ArrayList<>();
 	}
 
@@ -33,15 +28,8 @@ public class InterimContainer extends JComponent {
 		}
 	}
 
-	public Options<Object> getAttributes() {
-		return attrs;
-	}
-
+	@Override
 	public List<KeyValue<JComponent, Object>> getContent() {
 		return children;
-	}
-
-	public String getTag() {
-		return tag;
 	}
 }

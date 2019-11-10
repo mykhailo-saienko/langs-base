@@ -118,8 +118,9 @@ public class StringHelper {
 		return replaced.toString();
 	}
 
-	public static void filterPrefix(String prefix, Map<String, Object> attrs, Map<String, Object> result,
-			Collection<String> defaults) {
+	public static //
+	<V, M extends Map<String, V>, N extends Map<String, V>> //
+	void filterPrefix(String prefix, M attrs, N result, Collection<String> defaults) {
 		if (result == null) {
 			return;
 		}

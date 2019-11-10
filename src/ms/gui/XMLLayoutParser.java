@@ -8,12 +8,12 @@ import ms.gui.gen.UIConfigParser.AttributeContext;
 import ms.gui.gen.UIConfigParser.ContentContext;
 import ms.gui.gen.UIConfigParser.DocumentContext;
 import ms.gui.gen.UIConfigParser.ElementContext;
-import ms.utils.Options;
+import ms.utils.KWs;
 
 public class XMLLayoutParser<T> {
-	private final GUIFactory<T> factory;
+	private final TFactory factory;
 
-	public XMLLayoutParser(GUIFactory<T> factory) {
+	public XMLLayoutParser(StdFactory<T> factory) {
 		this.factory = factory;
 	}
 
@@ -30,7 +30,7 @@ public class XMLLayoutParser<T> {
 	}
 
 	private void addElement(ElementContext ctx) {
-		factory.beginProcess(getTag(ctx), getAttributes(ctx));
+		factory.parseTag(getTag(ctx), getAttributes(ctx));
 
 		ContentContext cc = ctx.content();
 		List<ElementContext> elems = cc != null ? cc.element() : null;
@@ -41,11 +41,11 @@ public class XMLLayoutParser<T> {
 			}
 		}
 
-		factory.endProcess();
+		factory.endParseTag();
 	}
 
-	private Options<String> getAttributes(ElementContext ctx) {
-		Options<String> attrs = new Options<>();
+	private KWs<String> getAttributes(ElementContext ctx) {
+		KWs<String> attrs = new KWs<>();
 		List<AttributeContext> attrCtxs = ctx.attribute();
 		for (AttributeContext ac : attrCtxs) {
 			String name = ac.Name().getText();

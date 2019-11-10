@@ -21,7 +21,7 @@ public class Attribute {
 	}
 
 	public List<String> getParams() {
-		return subattrs.stream().map(a -> a.value).collect(Collectors.toList());
+		return subattrs.stream().map(Attribute::getValue).collect(Collectors.toList());
 	}
 
 	public List<Attribute> getSubattributes() {
