@@ -21,6 +21,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import ms.ipp.base.KeyValue;
+
 /**
  * @author Mykhailo Saienko
  * 
@@ -28,41 +30,43 @@ import java.util.function.Predicate;
 public class DateHelper {
 
 	public static final Locale LOCALE = Locale.ENGLISH;
-	static final TimeZone TIME_ZONE = Calendar.getInstance().getTimeZone();
-	static final Calendar calendar = Calendar.getInstance(TIME_ZONE);
+
+	// Default is the system time zone
+	static Calendar calendar = getCalendar();
+
+	public static TimeZone getUTC() {
+		return TimeZone.getTimeZone("UTC");
+	}
+
+	public static void setSystemTimeZone(TimeZone zone) {
+		TimeZone.setDefault(zone);
+		calendar = getCalendar();
+	}
 
 	static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
 	static final ThreadLocal<SimpleDateFormat> DATETIME_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected SimpleDateFormat initialValue() {
-			SimpleDateFormat f = new SimpleDateFormat(DEFAULT_DATE_FORMAT, getLocale());
-			f.setTimeZone(TIME_ZONE);
-			return f;
+			return new SimpleDateFormat(DEFAULT_DATE_FORMAT, getLocale());
 		};
 	};
 	static final ThreadLocal<SimpleDateFormat> DATETIME_FORMAT_ALL = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected SimpleDateFormat initialValue() {
-			SimpleDateFormat f = new SimpleDateFormat(DEFAULT_DATE_FORMAT + ".SSS", getLocale());
-			f.setTimeZone(TIME_ZONE);
-			return f;
+			return new SimpleDateFormat(DEFAULT_DATE_FORMAT + ".SSS", getLocale());
 		};
 	};
 	static final ThreadLocal<SimpleDateFormat> DATE_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected SimpleDateFormat initialValue() {
-			SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd", getLocale());
-			f.setTimeZone(TIME_ZONE);
-			return f;
+			return new SimpleDateFormat("yyyy-MM-dd", getLocale());
 		};
 	};
 	static final ThreadLocal<SimpleDateFormat> TIME_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected SimpleDateFormat initialValue() {
-			SimpleDateFormat f = new SimpleDateFormat("HH:mm:ss", getLocale());
-			f.setTimeZone(TIME_ZONE);
-			return f;
+			return new SimpleDateFormat("HH:mm:ss", getLocale());
 		};
 	};
 
@@ -73,6 +77,15 @@ public class DateHelper {
 	public static final Date getNow() {
 		calendar.setTimeInMillis(currentTimeMillis());
 		return calendar.getTime();
+	}
+
+	public static Date shift(Date source, TimeZone from, TimeZone to) {
+		if (source == null) {
+			return null;
+		}
+		long time = source.getTime();
+		long newTime = time - from.getOffset(time) + to.getOffset(time);
+		return new Date(newTime);
 	}
 
 	public static Date getToday(int hours, int minutes, int seconds, int millisecs) {
@@ -92,8 +105,7 @@ public class DateHelper {
 	/**
 	 * 
 	 * @param year
-	 * @param month
-	 *            month is 0-based, i.e., 0 stands for January
+	 * @param month     month is 0-based, i.e., 0 stands for January
 	 * @param day
 	 * @param hours
 	 * @param minutes
@@ -178,6 +190,18 @@ public class DateHelper {
 		return date;
 	}
 
+	@SafeVarargs
+	public static <T> KeyValue<Date, T> minPair(boolean nullIsMin, Function<T, Date> transform, T... elems) {
+		assert elems.length > 0 : "There must be at least one date to compare";
+		Date date = transform.apply(elems[0]);
+		int index = 0;
+		for (int i = 1; i < elems.length; ++i) {
+			date = min(nullIsMin, date, transform.apply(elems[i]));
+			index = i;
+		}
+		return KeyValue.KVP(date, elems[index]);
+	}
+
 	public static Date max(boolean nullIsMin, Date... dates) {
 		assert dates.length > 0 : "There must be at least one date to compare";
 		Date date = dates[0];
@@ -210,10 +234,10 @@ public class DateHelper {
 		if (inDate == null || inTime == null) {
 			return null;
 		}
-		Calendar date = Calendar.getInstance();
+		Calendar date = getCalendar();
 		date.setTime(inDate);
 
-		Calendar time = Calendar.getInstance();
+		Calendar time = getCalendar();
 		time.setTime(inTime);
 		date.set(HOUR_OF_DAY, time.get(HOUR_OF_DAY));
 		date.set(MINUTE, time.get(MINUTE));
@@ -258,9 +282,17 @@ public class DateHelper {
 		}
 	}
 
+	public static final Date safeParseTime(String date) {
+		try {
+			return parseTime(date);
+		} catch (ParseException e) {
+			throw new IllegalArgumentException(e);
+		}
+	}
+
 	/**
-	 * Flexibly decides which format to use: the one with the milliseconds and
-	 * the one without
+	 * Flexibly decides which format to use: the one with the milliseconds and the
+	 * one without
 	 * 
 	 * @param date
 	 * @return
@@ -291,12 +323,12 @@ public class DateHelper {
 	 * Parses text from a string to produce a Date. <br>
 	 * The method attempts to parse text starting at the index given by pos. If
 	 * parsing succeeds, then the index of pos is updated to the index after the
-	 * last character used (parsing does not necessarily use all characters up
-	 * to the end of the string), and the parsed date is returned. The updated
-	 * pos can be used to indicate the starting point for the next call to this
-	 * method. If an error occurs, then the index of pos is not changed, the
-	 * error index of pos is set to the index of the character where the error
-	 * occurred, and null is returned.
+	 * last character used (parsing does not necessarily use all characters up to
+	 * the end of the string), and the parsed date is returned. The updated pos can
+	 * be used to indicate the starting point for the next call to this method. If
+	 * an error occurs, then the index of pos is not changed, the error index of pos
+	 * is set to the index of the character where the error occurred, and null is
+	 * returned.
 	 * 
 	 * @param source
 	 * @return
@@ -321,12 +353,16 @@ public class DateHelper {
 		new Thread(r, name).start();
 	}
 
+	public static boolean isWeekend(Date date) {
+		int day = get(date, Calendar.DAY_OF_WEEK);
+		return day == Calendar.SUNDAY || day == Calendar.SATURDAY;
+	}
+
 	/**
 	 * 
 	 * @param target
 	 * @param threshold
-	 * @param resolution
-	 *            minimum time resolution in milliseconds
+	 * @param resolution minimum time resolution in milliseconds
 	 */
 	public static void advance(Date target, Date threshold, Integer resolution) {
 		if (resolution == null || threshold.before(target)) {
@@ -344,8 +380,8 @@ public class DateHelper {
 	}
 
 	/**
-	 * Simple but slow advance method. Recommended for usage if the dates are
-	 * not very far from each other
+	 * Simple but slow advance method. Recommended for usage if the dates are not
+	 * very far from each other
 	 * 
 	 * @param target
 	 * @param threshold
@@ -409,11 +445,22 @@ public class DateHelper {
 	 * @param task
 	 */
 	public static void forEachDay(Date begin, Date end, BiConsumer<Date, Date> task) {
-		Date day = begin;
+		forEachPeriod(begin, end, Calendar.DATE, 1, task);
+	}
+
+	public static void forEachPeriod(Date begin, Date end, int type, int number, BiConsumer<Date, Date> task) {
+		if (begin == null) {
+			throw new IllegalArgumentException("Begin date cannot be null");
+		}
+
+		if (end == null) {
+			end = getNow();
+		}
+		Date day = align(begin, type, number);
 		while (!day.after(end)) {
-			// we store data for each day in a separate file
-			Date from = get(day, 0, 0, 0, 0);
-			day = add(from, Calendar.DAY_OF_YEAR, 1);
+			// call consumer for each (aligned) period [from, to)
+			Date from = day;
+			day = add(from, type, number);
 			task.accept(from, add(day, Calendar.MILLISECOND, -1));
 		}
 	}
@@ -437,6 +484,10 @@ public class DateHelper {
 		return (hour == null || hour.test(get(date, Calendar.HOUR_OF_DAY)))//
 				&& (minute == null || minute.test(get(date, Calendar.MINUTE))) //
 				&& (second == null || second.test(get(date, Calendar.SECOND)));
+	}
+
+	private static Calendar getCalendar() {
+		return Calendar.getInstance();
 	}
 
 }

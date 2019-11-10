@@ -6,8 +6,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.util.Collection;
-import java.util.function.Function;
 
 public class LogFile implements Closeable {
 	public static final String UTF_8 = IOHelper.UTF_8;
@@ -30,7 +28,7 @@ public class LogFile implements Closeable {
 			close();
 			throw e;
 		}
-		addNewLine = false;
+		addNewLine = !IOHelper.isEmpty(path);
 	}
 
 	public void line(String line) throws IOException {
@@ -53,16 +51,20 @@ public class LogFile implements Closeable {
 		}
 	}
 
-	public static <T> void log(String path, String encoding, Collection<T> items, Function<T, String> serializer,
-			String header) throws IOException {
+	public static <T> void log(String path, String encoding, Iterable<String> items, String header, boolean append)
+			throws IOException {
 		if (items == null) {
 			throw new IllegalArgumentException("Items cannot be null");
 		}
 
-		try (LogFile file = new LogFile(path, encoding)) {
-			file.line(header);
-			for (T item : items) {
-				file.line(serializer.apply(item));
+		try (LogFile file = new LogFile(path, encoding, append)) {
+			// append header only if it exists AND we either re-write the file or
+			// we append but the file is empty.
+			if (header != null && (!append || IOHelper.isEmpty(path))) {
+				file.line(header);
+			}
+			for (String item : items) {
+				file.line(item);
 			}
 		}
 	}

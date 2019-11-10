@@ -42,12 +42,38 @@ public class IOHelper {
 	 * @return
 	 */
 	public static String getDirPath(String dir) throws IOException {
+		return getDirPath(dir, false);
+	}
+
+	public static String getDirPath(String dir, boolean force) throws IOException {
 		File dirFile = new File(dir);
+		if (force) {
+			getDirPath(new File(dir).getParent());
+		}
 		if (!dirFile.exists() && !dirFile.mkdir()) {
 			throw new IOException(
 					dirFile.getAbsolutePath() + " cannot create directory '" + dirFile.getAbsolutePath() + "'");
 		}
 		return dirFile.getAbsolutePath();
+	}
+
+	public static void ensureDirExists(String file) throws IOException {
+		getDirPath(new File(file).getParent());
+	}
+
+	public static boolean isEmpty(String path) {
+		File f = new File(path);
+		// non-existent files are deemed empty
+		if (!f.exists()) {
+			return true;
+		} else {
+			// An empty UTF-8 file may still contains 2 or 3 bytes.
+			// As our files normally contain more than 3 bytes per line, this is safe in our
+			// case.
+			// https://stackoverflow.com/questions/7190618/most-efficient-way-to-check-if-a-file-is-empty-in-java-on-windows
+			// https://stackoverflow.com/questions/18516343/why-empty-text-file-contains-3-bytes
+			return f.length() <= 3;
+		}
 	}
 
 	public static File[] listFiles(String dir, String... extensions) throws IOException {
@@ -70,8 +96,8 @@ public class IOHelper {
 	}
 
 	/**
-	 * Deletes file or directory, even if it is non-empty. Returns false only if
-	 * the object is not found or can not be deleted due to lacking permissions.
+	 * Deletes file or directory, even if it is non-empty. Returns false only if the
+	 * object is not found or can not be deleted due to lacking permissions.
 	 * 
 	 * @param path
 	 * @return
@@ -141,8 +167,7 @@ public class IOHelper {
 	}
 
 	/**
-	 * Loads a file's contents into a string with a given encoding and returns
-	 * it.
+	 * Loads a file's contents into a string with a given encoding and returns it.
 	 * 
 	 * @param path
 	 * @return
@@ -220,5 +245,14 @@ public class IOHelper {
 					/* ignore */
 				}
 		}
+	}
+
+	public static boolean fileExists(String fileName) {
+		File file = new File(fileName);
+		return file.exists() && file.isFile();
+	}
+
+	public static String currentDir() {
+		return Paths.get("").toAbsolutePath().toString();
 	}
 }
