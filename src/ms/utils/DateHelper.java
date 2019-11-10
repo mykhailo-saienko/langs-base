@@ -456,12 +456,12 @@ public class DateHelper {
 		if (end == null) {
 			end = getNow();
 		}
-		Date day = align(begin, type, number);
-		while (!day.after(end)) {
+		Date date = align(begin, type, number);
+		while (!date.after(end)) {
 			// call consumer for each (aligned) period [from, to)
-			Date from = day;
-			day = add(from, type, number);
-			task.accept(from, add(day, Calendar.MILLISECOND, -1));
+			Date from = date;
+			date = add(from, type, number);
+			task.accept(from, date);
 		}
 	}
 
