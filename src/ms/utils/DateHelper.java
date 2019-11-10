@@ -444,11 +444,12 @@ public class DateHelper {
 	 * @param end
 	 * @param task
 	 */
-	public static void forEachDay(Date begin, Date end, BiConsumer<Date, Date> task) {
-		forEachPeriod(begin, end, Calendar.DATE, 1, task);
+	public static void forEachDay(Date begin, Date end, boolean includeStart, BiConsumer<Date, Date> task) {
+		forEachPeriod(begin, end, includeStart, Calendar.DATE, 1, task);
 	}
 
-	public static void forEachPeriod(Date begin, Date end, int type, int number, BiConsumer<Date, Date> task) {
+	public static void forEachPeriod(Date begin, Date end, boolean includeStart, int type, int number,
+			BiConsumer<Date, Date> task) {
 		if (begin == null) {
 			throw new IllegalArgumentException("Begin date cannot be null");
 		}
@@ -456,9 +457,18 @@ public class DateHelper {
 		if (end == null) {
 			end = getNow();
 		}
+		// interpret both dates as END dates of some continuous events. Hence, if the
+		// caller signals that 'begin' must be included (i.e., treated as the end of an
+		// event) and if begin is aligned, it means the first event ENDS at an aligned
+		// date but its start date is BEFORE this date. Hence, we need to start with
+		// (begin-1 period, begin] in this case.
 		Date date = align(begin, type, number);
+		if (date.equals(begin) && includeStart) {
+			date = add(begin, type, -number);
+		}
+
 		while (!date.after(end)) {
-			// call consumer for each (aligned) period [from, to)
+
 			Date from = date;
 			date = add(from, type, number);
 			task.accept(from, date);
