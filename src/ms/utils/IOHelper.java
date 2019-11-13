@@ -58,7 +58,7 @@ public class IOHelper {
 	}
 
 	public static void ensureDirExists(String file) throws IOException {
-		getDirPath(new File(file).getParent());
+		getDirPath(new File(file).getParent(), true);
 	}
 
 	public static boolean isEmpty(String path) {
