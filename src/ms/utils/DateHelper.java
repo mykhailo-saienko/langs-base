@@ -43,6 +43,10 @@ public class DateHelper {
 		calendar = getCalendar();
 	}
 
+	public static TimeZone getSystemTimeZone() {
+		return TimeZone.getDefault();
+	}
+
 	static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
 	static final ThreadLocal<SimpleDateFormat> DATETIME_FORMAT = new ThreadLocal<SimpleDateFormat>() {
@@ -82,10 +86,13 @@ public class DateHelper {
 	public static Date shift(Date source, TimeZone from, TimeZone to) {
 		if (source == null) {
 			return null;
+		} else if (from.hasSameRules(to)) {
+			return source;
+		} else {
+			long time = source.getTime();
+			long newTime = time - from.getOffset(time) + to.getOffset(time);
+			return new Date(newTime);
 		}
-		long time = source.getTime();
-		long newTime = time - from.getOffset(time) + to.getOffset(time);
-		return new Date(newTime);
 	}
 
 	public static Date getToday(int hours, int minutes, int seconds, int millisecs) {
