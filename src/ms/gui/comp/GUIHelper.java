@@ -16,6 +16,7 @@ import java.net.URL;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
@@ -162,32 +163,35 @@ public class GUIHelper {
 	}
 
 	public static boolean execute(Runnable r, String entity, int attempts) {
-		if (attempts > 6 || attempts <= 0) {
-			throw new IllegalArgumentException("Invalid nr of attempts " + attempts + ": should be between 1 and 6");
-		}
+		// one of the most common errors is IllegalArgumentException from
+		// AVU.checkHeaders when the server returns "out-of-calls" error.
+		// --> Wait for 1 min to be sure that we have available calls.
+		// Another error is SocketTimeout which mostly occurs during when
+		// AV server is down -> wait for 1,2,4,8,16,... mins, then skip and
+		// go on to the next asset.
+		return execute(r, entity, attempts, i -> (int) Math.pow(2, i - 1) * 60 * 1000);
+	}
 
+	public static boolean execute(Runnable r, String entity, int attempts, Function<Integer, Integer> waitFor) {
 		int attempt = 1;
 		while (true) {
 			try {
 				r.run();
 				return true;
 			} catch (Exception e) {
-				// one of the most common errors is IllegalArgumentException from
-				// AVU.checkHeaders when the server returns "out-of-calls" error.
-				// --> Wait for 1 min to be sure.
-				// Another error is SocketTimeout which mostly occurs during when
-				// AV server is down -> wait for 1,2,4,8,16,... mins, then skip and
-				// go on to the next asset.
 				if (e instanceof SocketTimeoutException | e instanceof IllegalArgumentException) {
 					logger.info("Error after attempt #" + attempt + " on entity '" + entity + "': " + e.getMessage());
 
 					if (attempt < attempts) {
-						int sleep = (int) Math.pow(2, attempt - 1);
-						logger.info("Retrying in " + sleep + " mins");
-						DateHelper.sleep(sleep * 60 * 1000);
+						int sleep = waitFor.apply(attempt);
+
+						if (sleep > 0) {
+							logger.info("Retrying in " + sleep + " mins");
+							DateHelper.sleep(sleep);
+						}
 						++attempt;
 					} else {
-						logger.error("Giving up re-connections on '" + entity + "'");
+						logger.error("Giving up re-tries on '" + entity + "'");
 						return false;
 					}
 				} else {
