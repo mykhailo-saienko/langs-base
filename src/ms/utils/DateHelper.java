@@ -21,6 +21,9 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import ms.ipp.base.KeyValue;
 
 /**
@@ -28,6 +31,7 @@ import ms.ipp.base.KeyValue;
  * 
  */
 public class DateHelper {
+	private static final Logger logger = LogManager.getLogger();
 
 	public static final Locale LOCALE = Locale.ENGLISH;
 
@@ -81,6 +85,42 @@ public class DateHelper {
 	public static final Date getNow() {
 		calendar.setTimeInMillis(currentTimeMillis());
 		return calendar.getTime();
+	}
+
+	public static boolean before(Date date, Date ref, boolean strict) {
+		return date.before(ref) || (!strict && date.equals(ref));
+	}
+
+	public static boolean after(Date date, Date ref, boolean strict) {
+		return date.after(ref) || (!strict && date.equals(ref));
+	}
+
+	public static Date closest(Date ref, Predicate<Date> pred, Function<Date, Date> generator, int periodType,
+			int periodLength) {
+		// TODO: May have more efficient implementation for concrete Schedulers
+		Date closest = generator.apply(ref);
+		logger.trace("closest enter: ref={}, closest={}", format(ref), format(closest));
+		Date initStart = ref;
+		Date preliminaryClosest = closest;
+
+		// 1. ensure there is no date closer to ref than 'closest' (but still
+		// satisfying the predicate)
+		while (pred.test(preliminaryClosest)) {
+			closest = preliminaryClosest;
+			initStart = DateHelper.add(initStart, periodType, periodLength);
+			preliminaryClosest = generator.apply(initStart);
+			logger.trace("closest Phase 1: ref={}, closest={}, preliminary={}, initStart={}", format(ref),
+					format(closest), format(preliminaryClosest), format(initStart));
+		}
+
+		// 2. ensure we haven't landed in the past (or optionally the present)
+		while (!pred.test(closest)) {
+			closest = generator.apply(initStart);
+			initStart = DateHelper.add(initStart, periodType, -periodLength);
+			logger.trace("closest Phase 2: closest={}, initStart={}", format(closest), format(closest));
+		}
+		logger.trace("closest result={}", format(closest));
+		return closest;
 	}
 
 	public static Date shift(Date source, TimeZone from, TimeZone to) {
