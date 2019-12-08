@@ -11,7 +11,6 @@ import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -46,19 +45,27 @@ public class IOHelper {
 	}
 
 	public static String getDirPath(String dir, boolean force) throws IOException {
-		File dirFile = new File(dir);
-		if (force) {
-			getDirPath(new File(dir).getParent());
+		File dirFile = new File(dir).getAbsoluteFile();
+		if (force && !dirFile.exists()) {
+			getDirPath(dirFile.getParent(), true);
 		}
 		if (!dirFile.exists() && !dirFile.mkdir()) {
-			throw new IOException(
-					dirFile.getAbsolutePath() + " cannot create directory '" + dirFile.getAbsolutePath() + "'");
+			throw new IOException("Cannot create directory '" + dirFile.getPath() + "'");
 		}
-		return dirFile.getAbsolutePath();
+		return dirFile.getPath();
 	}
 
-	public static void ensureDirExists(String file) throws IOException {
-		getDirPath(new File(file).getParent(), true);
+	public static void ensureDirExists(String dir) throws IOException {
+		File file = new File(dir).getAbsoluteFile();
+		if (file.exists() && !file.isDirectory()) {
+			throw new IOException("Path '" + dir + "' is a file, not a directory");
+		} else if (!file.exists()) {
+			getDirPath(dir, true);
+		}
+	}
+
+	public static void ensureParentDirExists(String file) throws IOException {
+		getDirPath(new File(file).getAbsoluteFile().getParent(), true);
 	}
 
 	public static boolean isEmpty(String path) {
@@ -163,7 +170,7 @@ public class IOHelper {
 	}
 
 	public static String loadFromFile(String path) throws IOException {
-		return loadFromFile(path, StandardCharsets.UTF_8.name());
+		return loadFromFile(path, UTF_8);
 	}
 
 	/**

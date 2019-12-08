@@ -1,6 +1,8 @@
 package ms.utils;
 
 import static java.util.Arrays.asList;
+import static ms.ipp.Iterables.list;
+import static ms.ipp.Iterables.mapped;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -181,5 +183,16 @@ public class StringHelper {
 
 	public static String ultimateTrim(String tzdescraw) {
 		return tzdescraw.replaceAll("^\\s+", "").replaceAll("\\s+$", "");
+	}
+
+	/**
+	 * Split by commas, using positive non-matching lookahead for non-quoted and
+	 * quoted strings
+	 * 
+	 * @param input
+	 * @return
+	 */
+	public static List<String> splitQuoted(String input) {
+		return list(mapped(asList(input.split(",(?=([^\"]*\"[^\"]*\")*[^\"]*$)")), String::trim));
 	}
 }
