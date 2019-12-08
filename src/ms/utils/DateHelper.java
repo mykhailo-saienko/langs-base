@@ -36,7 +36,12 @@ public class DateHelper {
 	public static final Locale LOCALE = Locale.ENGLISH;
 
 	// Default is the system time zone
-	static Calendar calendar = getCalendar();
+	static final ThreadLocal<Calendar> calendar = new ThreadLocal<Calendar>() {
+		@Override
+		protected Calendar initialValue() {
+			return getCalendar();
+		};
+	};
 
 	public static TimeZone getUTC() {
 		return TimeZone.getTimeZone("UTC");
@@ -44,7 +49,7 @@ public class DateHelper {
 
 	public static void setSystemTimeZone(TimeZone zone) {
 		TimeZone.setDefault(zone);
-		calendar = getCalendar();
+		calendar.set(getCalendar());
 	}
 
 	public static TimeZone getSystemTimeZone() {
@@ -83,8 +88,8 @@ public class DateHelper {
 	}
 
 	public static final Date getNow() {
-		calendar.setTimeInMillis(currentTimeMillis());
-		return calendar.getTime();
+		calendar.get().setTimeInMillis(currentTimeMillis());
+		return calendar.get().getTime();
 	}
 
 	public static boolean before(Date date, Date ref, boolean strict) {
@@ -140,12 +145,13 @@ public class DateHelper {
 	}
 
 	public static Date get(Date source, int hours, int minutes, int seconds, int millisecs) {
-		calendar.setTime(source);
-		calendar.set(HOUR_OF_DAY, hours);
-		calendar.set(MINUTE, minutes);
-		calendar.set(SECOND, seconds);
-		calendar.set(MILLISECOND, millisecs);
-		return calendar.getTime();
+		Calendar cal = calendar.get();
+		cal.setTime(source);
+		cal.set(HOUR_OF_DAY, hours);
+		cal.set(MINUTE, minutes);
+		cal.set(SECOND, seconds);
+		cal.set(MILLISECOND, millisecs);
+		return cal.getTime();
 
 	}
 
@@ -161,26 +167,30 @@ public class DateHelper {
 	 * @return
 	 */
 	public static Date get(int year, int month, int day, int hours, int minutes, int seconds, int millisecs) {
-		calendar.set(year, month, day, hours, minutes, seconds);
-		calendar.set(MILLISECOND, millisecs);
-		return calendar.getTime();
+		Calendar cal = calendar.get();
+		cal.set(year, month, day, hours, minutes, seconds);
+		cal.set(MILLISECOND, millisecs);
+		return cal.getTime();
 	}
 
 	public static int get(Date source, int field) {
-		calendar.setTime(source);
-		return calendar.get(field);
+		Calendar cal = calendar.get();
+		cal.setTime(source);
+		return cal.get(field);
 	}
 
 	public static Date set(Date source, int field, int value) {
-		calendar.setTime(source);
-		calendar.set(field, value);
-		return calendar.getTime();
+		Calendar cal = calendar.get();
+		cal.setTime(source);
+		cal.set(field, value);
+		return cal.getTime();
 	}
 
 	public static Date add(Date source, int field, int amount) {
-		calendar.setTime(source);
-		calendar.add(field, amount);
-		return calendar.getTime();
+		Calendar cal = calendar.get();
+		cal.setTime(source);
+		cal.add(field, amount);
+		return cal.getTime();
 	}
 
 	/**
