@@ -106,8 +106,8 @@ public class StringHelper {
 				} else if (next == 't') {
 					replaced.append('\t');
 				} else {
-					throw new IllegalArgumentException(
-							"Unexpected escape sequence '" + source.substring(i, i + 2) + "' at position " + i);
+					throw new IllegalArgumentException("Unexpected escape sequence '"
+							+ source.substring(i, i + 2) + "' at position " + i);
 				}
 				i += 2; // skip both characters
 			} else {

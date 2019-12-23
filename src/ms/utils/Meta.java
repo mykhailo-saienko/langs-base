@@ -58,8 +58,8 @@ public class Meta<T> implements Predicate<T> {
 
 	public void assertTrue(T t) {
 		if (!test(t)) {
-			throw new IllegalArgumentException(
-					"Required meta " + id + " failed on " + t + (messageOnFail != null ? ": " + messageOnFail : ""));
+			throw new IllegalArgumentException("Required meta " + id + " failed on " + t
+					+ (messageOnFail != null ? ": " + messageOnFail : ""));
 		}
 	}
 

@@ -51,8 +51,8 @@ public class LogFile implements Closeable {
 		}
 	}
 
-	public static <T> void log(String path, String encoding, Iterable<String> items, String header, boolean append)
-			throws IOException {
+	public static <T> void log(String path, String encoding, Iterable<String> items, String header,
+			boolean append) throws IOException {
 		if (items == null) {
 			throw new IllegalArgumentException("Items cannot be null");
 		}

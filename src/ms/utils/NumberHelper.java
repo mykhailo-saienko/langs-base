@@ -84,8 +84,8 @@ public class NumberHelper {
 		if (number == null)
 			return "null";
 
-		if (number instanceof Integer || number instanceof Double || number instanceof Float || number instanceof Long
-				|| number instanceof BigDecimal) {
+		if (number instanceof Integer || number instanceof Double || number instanceof Float
+				|| number instanceof Long || number instanceof BigDecimal) {
 			return getGeneralFormat().format(number);
 		} else {
 			return getGeneralFormat().format(number.doubleValue());
@@ -106,7 +106,8 @@ public class NumberHelper {
 
 	public static synchronized NumberFormat getPriceFormat() {
 		if (priceFormat == null) {
-			DecimalFormat format = new DecimalFormat("#,##0.00", new DecimalFormatSymbols(DateHelper.getLocale()));
+			DecimalFormat format = new DecimalFormat("#,##0.00",
+					new DecimalFormatSymbols(DateHelper.getLocale()));
 			format.setParseBigDecimal(true);
 			priceFormat = format;
 		}
@@ -131,7 +132,8 @@ public class NumberHelper {
 
 	public static synchronized DecimalFormat getQtyFormat() {
 		if (qtyFormat == null) {
-			qtyFormat = new DecimalFormat("#,##0", new DecimalFormatSymbols(DateHelper.getLocale()));
+			qtyFormat = new DecimalFormat("#,##0",
+					new DecimalFormatSymbols(DateHelper.getLocale()));
 		}
 		return qtyFormat;
 	}
@@ -187,7 +189,9 @@ public class NumberHelper {
 			BigDecimal num = parse(format(val));
 			return scale < 0 ? num : num.setScale(scale, RoundingMode.HALF_UP);
 		} catch (ParseException e) {
-			logger.fatal("An error occured while converting double into BigDecimal. This is a design issue", e);
+			logger.fatal(
+					"An error occured while converting double into BigDecimal. This is a design issue",
+					e);
 			return null;
 		}
 	}

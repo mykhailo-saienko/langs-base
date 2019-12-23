@@ -48,17 +48,19 @@ public class KWs<T> extends HashMap<String, T> {
 		tryDo(name, null, proc, clazz);
 	}
 
-	public <U extends T> void tryDo(String name, List<String> ignore, Consumer<? super U> proc, Class<U> clazz) {
+	public <U extends T> void tryDo(String name, List<String> ignore, Consumer<? super U> proc,
+			Class<U> clazz) {
 		// TODO: Perform runtime checks
 		Iterables.ifExistsDo(name, this, ignore, proc);
 	}
 
-	public <U extends T, V> V tryApply(String name, Function<U, V> func, Class<U> clazz, Supplier<V> onMiss) {
+	public <U extends T, V> V tryApply(String name, Function<U, V> func, Class<U> clazz,
+			Supplier<V> onMiss) {
 		return tryApply(name, null, func, clazz, onMiss);
 	}
 
-	public <U extends T, V> V tryApply(String name, List<String> ignore, Function<U, V> func, Class<U> clazz,
-			Supplier<V> onMiss) {
+	public <U extends T, V> V tryApply(String name, List<String> ignore, Function<U, V> func,
+			Class<U> clazz, Supplier<V> onMiss) {
 		// TODO: Perform runtime checks
 		return Iterables.ifExistsApply(name, this, ignore, func, onMiss);
 	}
@@ -66,7 +68,8 @@ public class KWs<T> extends HashMap<String, T> {
 	public <U extends T, V> V apply(String name, Function<U, V> func, Class<U> clazz) {
 		// TODO: ScanningOptions should notice that this key is mandatory
 		return tryApply(name, null, func, clazz, () -> {
-			throw new IllegalArgumentException("Key " + name + " of type " + clazz.getSimpleName() + " is missing");
+			throw new IllegalArgumentException(
+					"Key " + name + " of type " + clazz.getSimpleName() + " is missing");
 		});
 	}
 
@@ -74,7 +77,8 @@ public class KWs<T> extends HashMap<String, T> {
 		tryDoList(name, null, proc, clazz);
 	}
 
-	public <U extends T> void tryDoList(String name, List<String> ignore, Consumer<List<U>> proc, Class<U> clazz) {
+	public <U extends T> void tryDoList(String name, List<String> ignore, Consumer<List<U>> proc,
+			Class<U> clazz) {
 		// TODO: Perform runtime checks
 		Iterables.ifExistsDo(name, this, ignore, proc);
 	}
@@ -83,18 +87,20 @@ public class KWs<T> extends HashMap<String, T> {
 		tryDoPair(name, null, proc, clazz);
 	}
 
-	public <U extends T> void tryDoPair(String name, List<String> ignore, BiConsumer<U, U> proc, Class<U> clazz) {
+	public <U extends T> void tryDoPair(String name, List<String> ignore, BiConsumer<U, U> proc,
+			Class<U> clazz) {
 		// TODO: Additional information is that we expect exactly two values here
 		assertEquals(name, (NamedAttribute<T, Integer>) NamedAttribute.size, 2);
 		tryDoList(name, ignore, d -> proc.accept(d.get(0), d.get(1)), clazz);
 	}
 
-	public <K, U> void tryDoMap(String name, Consumer<Map<K, U>> proc, Class<K> keyClass, Class<U> valueClass) {
+	public <K, U> void tryDoMap(String name, Consumer<Map<K, U>> proc, Class<K> keyClass,
+			Class<U> valueClass) {
 		tryDoMap(name, null, proc, keyClass, valueClass);
 	}
 
-	public <K, U> void tryDoMap(String name, List<String> ignore, Consumer<Map<K, U>> proc, Class<K> keyClass,
-			Class<U> valueClass) {
+	public <K, U> void tryDoMap(String name, List<String> ignore, Consumer<Map<K, U>> proc,
+			Class<K> keyClass, Class<U> valueClass) {
 		// TODO: Perform runtime checks
 		Iterables.ifExistsDo(name, this, ignore, proc);
 	}

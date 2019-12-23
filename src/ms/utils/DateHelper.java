@@ -100,8 +100,8 @@ public class DateHelper {
 		return date.after(ref) || (!strict && date.equals(ref));
 	}
 
-	public static Date closest(Date ref, Predicate<Date> pred, Function<Date, Date> generator, int periodType,
-			int periodLength) {
+	public static Date closest(Date ref, Predicate<Date> pred, Function<Date, Date> generator,
+			int periodType, int periodLength) {
 		// TODO: May have more efficient implementation for concrete Schedulers
 		Date closest = generator.apply(ref);
 		logger.trace("closest enter: ref={}, closest={}", format(ref), format(closest));
@@ -114,15 +114,16 @@ public class DateHelper {
 			closest = preliminaryClosest;
 			initStart = DateHelper.add(initStart, periodType, periodLength);
 			preliminaryClosest = generator.apply(initStart);
-			logger.trace("closest Phase 1: ref={}, closest={}, preliminary={}, initStart={}", format(ref),
-					format(closest), format(preliminaryClosest), format(initStart));
+			logger.trace("closest Phase 1: ref={}, closest={}, preliminary={}, initStart={}",
+					format(ref), format(closest), format(preliminaryClosest), format(initStart));
 		}
 
 		// 2. ensure we haven't landed in the past (or optionally the present)
 		while (!pred.test(closest)) {
 			closest = generator.apply(initStart);
 			initStart = DateHelper.add(initStart, periodType, -periodLength);
-			logger.trace("closest Phase 2: closest={}, initStart={}", format(closest), format(closest));
+			logger.trace("closest Phase 2: closest={}, initStart={}", format(closest),
+					format(closest));
 		}
 		logger.trace("closest result={}", format(closest));
 		return closest;
@@ -166,7 +167,8 @@ public class DateHelper {
 	 * @param millisecs
 	 * @return
 	 */
-	public static Date get(int year, int month, int day, int hours, int minutes, int seconds, int millisecs) {
+	public static Date get(int year, int month, int day, int hours, int minutes, int seconds,
+			int millisecs) {
 		Calendar cal = calendar.get();
 		cal.set(year, month, day, hours, minutes, seconds);
 		cal.set(MILLISECOND, millisecs);
@@ -248,7 +250,8 @@ public class DateHelper {
 	}
 
 	@SafeVarargs
-	public static <T> KeyValue<Date, T> minPair(boolean nullIsMin, Function<T, Date> transform, T... elems) {
+	public static <T> KeyValue<Date, T> minPair(boolean nullIsMin, Function<T, Date> transform,
+			T... elems) {
 		assert elems.length > 0 : "There must be at least one date to compare";
 		Date date = transform.apply(elems[0]);
 		int index = 0;
@@ -463,7 +466,8 @@ public class DateHelper {
 	 */
 	public static Date align(Date target, int periodType, int periodLength) {
 		if (periodType == Calendar.ERA || periodType == Calendar.AM_PM) {
-			throw new IllegalArgumentException("Calendar.ERA and Calendar.AM_PM are not acceptable periodTypes");
+			throw new IllegalArgumentException(
+					"Calendar.ERA and Calendar.AM_PM are not acceptable periodTypes");
 		}
 		// --- first, truncate all less significant fields
 		if (periodType < MILLISECOND) {
@@ -501,12 +505,13 @@ public class DateHelper {
 	 * @param end
 	 * @param task
 	 */
-	public static void forEachDay(Date begin, Date end, boolean includeStart, BiConsumer<Date, Date> task) {
+	public static void forEachDay(Date begin, Date end, boolean includeStart,
+			BiConsumer<Date, Date> task) {
 		forEachPeriod(begin, end, includeStart, Calendar.DATE, 1, task);
 	}
 
-	public static void forEachPeriod(Date begin, Date end, boolean includeStart, int type, int number,
-			BiConsumer<Date, Date> task) {
+	public static void forEachPeriod(Date begin, Date end, boolean includeStart, int type,
+			int number, BiConsumer<Date, Date> task) {
 		if (begin == null) {
 			throw new IllegalArgumentException("Begin date cannot be null");
 		}

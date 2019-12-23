@@ -88,8 +88,8 @@ public class IOHelper {
 		if (lib.exists() && lib.isDirectory()) {
 			return lib.listFiles((f, s) -> hasExtension(s, extensions) && f.equals(lib));
 		}
-		throw new IOException(
-				"Library folder " + lib.getAbsolutePath() + " does not exist or is not a directory. Ignoring...");
+		throw new IOException("Library folder " + lib.getAbsolutePath()
+				+ " does not exist or is not a directory. Ignoring...");
 
 	}
 
@@ -129,14 +129,16 @@ public class IOHelper {
 	}
 
 	public static void deleteAll(String path) throws IOException {
-		Files.walk(Paths.get(path)).map(Path::toFile).sorted((o1, o2) -> -o1.compareTo(o2)).forEach(File::delete);
+		Files.walk(Paths.get(path)).map(Path::toFile).sorted((o1, o2) -> -o1.compareTo(o2))
+				.forEach(File::delete);
 	}
 
-	public static File promptFile(String curDir, Container parent, int type, boolean promptIfExists, String filterDesc,
-			String... filter) {
+	public static File promptFile(String curDir, Container parent, int type, boolean promptIfExists,
+			String filterDesc, String... filter) {
 		List<String> filters = Arrays.asList(filter);
 		if (filters.isEmpty()) {
-			throw new IllegalArgumentException("At least one filter must be specified for the file chooser");
+			throw new IllegalArgumentException(
+					"At least one filter must be specified for the file chooser");
 		}
 		final JFileChooser fc = new JFileChooser();
 		fc.addChoosableFileFilter(new FileNameExtensionFilter(filterDesc, filter));
@@ -157,7 +159,8 @@ public class IOHelper {
 				file = new File(path + "." + filters.get(0));
 			}
 			if (file.exists() && promptIfExists) {
-				int result = showConfirmDialog(parent, "This file exists. Are you sure you want to overwrite?", "LiveX",
+				int result = showConfirmDialog(parent,
+						"This file exists. Are you sure you want to overwrite?", "LiveX",
 						JOptionPane.YES_NO_OPTION);
 				if (result == JOptionPane.NO_OPTION) {
 					file = null;
@@ -195,10 +198,10 @@ public class IOHelper {
 	public static void processFromFile(String path, String encoding, boolean ignoreHeader,
 			Consumer<String> lineProcessor) throws IOException {
 		File file = new File(path);
-		try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(file), encoding))) {
-			// read and ignore the very first line
+		try (BufferedReader in = new BufferedReader(
+				new InputStreamReader(new FileInputStream(file), encoding))) {
 			if (ignoreHeader) {
-				in.readLine();
+				in.readLine(); // the first line is treated as header to be ignored
 			}
 			String line = null;
 			while ((line = in.readLine()) != null) {
@@ -242,8 +245,7 @@ public class IOHelper {
 				sb.append((char) readByte);
 			}
 
-			String lastLine = sb.reverse().toString();
-			return lastLine;
+			return sb.reverse().toString();
 		} finally {
 			if (fileHandler != null)
 				try {
