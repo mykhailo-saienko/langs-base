@@ -13,6 +13,7 @@ import java.awt.Rectangle;
 import java.lang.reflect.InvocationTargetException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -28,6 +29,7 @@ import javax.swing.SwingUtilities;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jdesktop.swingx.JXDatePicker;
 
 import ms.utils.DateHelper;
 
@@ -48,8 +50,9 @@ public class GUIHelper {
 
 	public static final Color BLEAK_BROWN = new Color(251, 238, 221);
 
-	private static ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 1, 2000, TimeUnit.MILLISECONDS,
-			new LinkedBlockingQueue<Runnable>(100), r -> new Thread(r, "LXStack"));
+	private static ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 1, 2000,
+			TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(100),
+			r -> new Thread(r, "LXStack"));
 
 	public static ImageIcon loadResImage(String path) {
 		URL url = GUIHelper.class.getResource(path);
@@ -81,25 +84,29 @@ public class GUIHelper {
 		executor.execute(r);
 	}
 
-	public static GridBagConstraints gbc(int x, int y, int xwidth, int ywidth, int fill, double weightx,
-			double weighty) {
+	public static GridBagConstraints gbc(int x, int y, int xwidth, int ywidth, int fill,
+			double weightx, double weighty) {
 		return gbc(x, y, xwidth, ywidth, 0, 0, 0, 0, fill, weightx, weighty);
 	}
 
-	public static GridBagConstraints gbc(int x, int y, int xwidth, int ywidth, int tInset, int lInset, int bInset,
-			int rInset, int fill, double weightx, double weighty) {
-		return gbc(x, y, xwidth, ywidth, tInset, lInset, bInset, rInset, fill, weightx, weighty, 0, 0);
+	public static GridBagConstraints gbc(int x, int y, int xwidth, int ywidth, int tInset,
+			int lInset, int bInset, int rInset, int fill, double weightx, double weighty) {
+		return gbc(x, y, xwidth, ywidth, tInset, lInset, bInset, rInset, fill, weightx, weighty, 0,
+				0);
 	}
 
-	public static GridBagConstraints gbc(int x, int y, int xwidth, int ywidth, int tInset, int lInset, int bInset,
-			int rInset, int fill, double weightx, double weighty, int ipadx, int ipady) {
-		return new GridBagConstraints(x, y, xwidth, ywidth, weightx, weighty, GridBagConstraints.CENTER, fill,
-				new Insets(tInset, lInset, bInset, rInset), ipadx, ipady);
+	public static GridBagConstraints gbc(int x, int y, int xwidth, int ywidth, int tInset,
+			int lInset, int bInset, int rInset, int fill, double weightx, double weighty, int ipadx,
+			int ipady) {
+		return new GridBagConstraints(x, y, xwidth, ywidth, weightx, weighty,
+				GridBagConstraints.CENTER, fill, new Insets(tInset, lInset, bInset, rInset), ipadx,
+				ipady);
 	}
 
 	public static String toString(GridBagConstraints c) {
-		return "{pos=[" + c.gridx + "," + c.gridy + "], size=[" + c.gridwidth + "," + c.gridheight + "], insets="
-				+ c.insets + ", weight=[" + c.weightx + "," + c.weighty + "], fill=" + c.fill + "}";
+		return "{pos=[" + c.gridx + "," + c.gridy + "], size=[" + c.gridwidth + "," + c.gridheight
+				+ "], insets=" + c.insets + ", weight=[" + c.weightx + "," + c.weighty + "], fill="
+				+ c.fill + "}";
 	}
 
 	public static void drawImage(JComponent component, Image image, Graphics g) {
@@ -110,10 +117,12 @@ public class GUIHelper {
 		int imWidth = image.getWidth(null);
 		int imHeight = image.getHeight(null);
 		Point start = GUIHelper.getIdealCenter(contWidth, contHeight, imWidth, imHeight);
-		g.drawImage(image, visibleRect.x + start.x, visibleRect.y + start.y, imWidth, imHeight, component);
+		g.drawImage(image, visibleRect.x + start.x, visibleRect.y + start.y, imWidth, imHeight,
+				component);
 	}
 
-	public static Point getIdealCenter(int containerWidth, int containerHeight, int objectWidth, int objectHeight) {
+	public static Point getIdealCenter(int containerWidth, int containerHeight, int objectWidth,
+			int objectHeight) {
 		int idealX = (containerWidth < objectWidth) ? 0 : (containerWidth - objectWidth) >> 1;
 		int idealY = (containerHeight < objectHeight) ? 0 : (containerHeight - objectHeight) >> 1;
 		return new Point(idealX, idealY);
@@ -141,6 +150,12 @@ public class GUIHelper {
 		return label;
 	}
 
+	public static JXDatePicker createDatePicker(Date initDate) {
+		JXDatePicker datePicker = new JXDatePicker(initDate);
+		datePicker.setPreferredSize(new Dimension(120, 26));
+		return datePicker;
+	}
+
 	public static JTextField createTextField(boolean editable) {
 		return createTextField(editable, "-");
 	}
@@ -153,7 +168,8 @@ public class GUIHelper {
 		return formatTextField(field, caption, 90, editable);
 	}
 
-	public static JTextField formatTextField(JTextField field, String caption, int width, boolean editable) {
+	public static JTextField formatTextField(JTextField field, String caption, int width,
+			boolean editable) {
 		field.setText(caption);
 		field.setEditable(editable);
 		field.setPreferredSize(new Dimension(width, 20));
@@ -172,7 +188,8 @@ public class GUIHelper {
 		return execute(r, entity, attempts, i -> (int) Math.pow(2, i - 1) * 60 * 1000);
 	}
 
-	public static boolean execute(Runnable r, String entity, int attempts, Function<Integer, Integer> waitFor) {
+	public static boolean execute(Runnable r, String entity, int attempts,
+			Function<Integer, Integer> waitFor) {
 		int attempt = 1;
 		while (true) {
 			try {
@@ -180,7 +197,8 @@ public class GUIHelper {
 				return true;
 			} catch (Exception e) {
 				if (e instanceof SocketTimeoutException | e instanceof IllegalArgumentException) {
-					logger.info("Error after attempt #" + attempt + " on entity '" + entity + "': " + e.getMessage());
+					logger.info("Error after attempt #" + attempt + " on entity '" + entity + "': "
+							+ e.getMessage());
 
 					if (attempt < attempts) {
 						int sleep = waitFor.apply(attempt);
@@ -195,8 +213,8 @@ public class GUIHelper {
 						return false;
 					}
 				} else {
-					logger.error("Unexpected error for attempt #" + attempt + " on entity '" + entity
-							+ "'. Aborting operation", e);
+					logger.error("Unexpected error for attempt #" + attempt + " on entity '"
+							+ entity + "'. Aborting operation", e);
 					return false;
 				}
 			}

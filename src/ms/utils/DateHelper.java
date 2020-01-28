@@ -24,6 +24,7 @@ import java.util.function.Predicate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import ms.ipp.Algorithms;
 import ms.ipp.base.KeyValue;
 
 /**
@@ -230,23 +231,8 @@ public class DateHelper {
 		return date1.before(date2) ? date1 : date2;
 	}
 
-	public static Date min(boolean nullIsMin, Date... dates) {
-		assert dates.length > 0 : "There must be at least one date to compare";
-		Date date = dates[0];
-		for (int i = 1; i < dates.length; ++i) {
-			date = min(nullIsMin, date, dates[i]);
-		}
-		return date;
-	}
-
-	@SafeVarargs
-	public static <T> Date min(boolean nullIsMin, Function<T, Date> transform, T... dates) {
-		assert dates.length > 0 : "There must be at least one date to compare";
-		Date date = transform.apply(dates[0]);
-		for (int i = 1; i < dates.length; ++i) {
-			date = min(nullIsMin, date, transform.apply(dates[i]));
-		}
-		return date;
+	public static Date min(boolean nullIsMin, Iterable<Date> dates) {
+		return Algorithms.reduce(null, d -> d, (d1, d2) -> min(nullIsMin, d1, d2), dates);
 	}
 
 	@SafeVarargs
@@ -262,15 +248,6 @@ public class DateHelper {
 		return KeyValue.KVP(date, elems[index]);
 	}
 
-	public static Date max(boolean nullIsMin, Date... dates) {
-		assert dates.length > 0 : "There must be at least one date to compare";
-		Date date = dates[0];
-		for (int i = 1; i < dates.length; ++i) {
-			date = max(nullIsMin, date, dates[i]);
-		}
-		return date;
-	}
-
 	public static Date max(boolean nullIsMax, Date date1, Date date2) {
 		if (date1 == null || date2 == null) {
 			if (nullIsMax) {
@@ -280,6 +257,10 @@ public class DateHelper {
 			}
 		}
 		return date1.before(date2) ? date2 : date1;
+	}
+
+	public static Date max(boolean nullIsMax, Iterable<Date> dates) {
+		return Algorithms.reduce(null, d -> d, (d1, d2) -> max(nullIsMax, d1, d2), dates);
 	}
 
 	public static void addTime(Date date, int hrs, int mins, int secs, long millisecs) {

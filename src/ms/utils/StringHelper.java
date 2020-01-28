@@ -181,8 +181,8 @@ public class StringHelper {
 		return splitPrefix(var, '.').getValue();
 	}
 
-	public static String ultimateTrim(String tzdescraw) {
-		return tzdescraw.replaceAll("^\\s+", "").replaceAll("\\s+$", "");
+	public static String ultimateTrim(String source) {
+		return source.replaceAll("^\\s+", "").replaceAll("\\s+$", "");
 	}
 
 	/**
