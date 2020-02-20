@@ -232,7 +232,7 @@ public class DateHelper {
 	}
 
 	public static Date min(boolean nullIsMin, Iterable<Date> dates) {
-		return Algorithms.reduce(null, d -> d, (d1, d2) -> min(nullIsMin, d1, d2), dates);
+		return Algorithms.reduce(d -> d, (d1, d2) -> min(nullIsMin, d1, d2), dates);
 	}
 
 	@SafeVarargs
@@ -260,7 +260,7 @@ public class DateHelper {
 	}
 
 	public static Date max(boolean nullIsMax, Iterable<Date> dates) {
-		return Algorithms.reduce(null, d -> d, (d1, d2) -> max(nullIsMax, d1, d2), dates);
+		return Algorithms.reduce(d -> d, (d1, d2) -> max(nullIsMax, d1, d2), dates);
 	}
 
 	public static void addTime(Date date, int hrs, int mins, int secs, long millisecs) {

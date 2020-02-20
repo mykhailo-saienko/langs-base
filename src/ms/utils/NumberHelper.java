@@ -250,6 +250,10 @@ public class NumberHelper {
 		return multiply(factor1, new BigDecimal(factor2), scale);
 	}
 
+	public static BigDecimal multiply(BigDecimal factor1, double factor2, int scale) {
+		return multiply(factor1, new BigDecimal(factor2), scale);
+	}
+
 	public static BigDecimal multiply(BigDecimal factor1, float factor2) {
 		return multiply(factor1, factor2, 2);
 	}

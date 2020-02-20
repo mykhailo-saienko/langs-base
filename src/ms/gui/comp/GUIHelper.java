@@ -204,7 +204,7 @@ public class GUIHelper {
 						int sleep = waitFor.apply(attempt);
 
 						if (sleep > 0) {
-							logger.info("Retrying in " + sleep + " mins");
+							logger.info("Retrying in " + sleep + " millis");
 							DateHelper.sleep(sleep);
 						}
 						++attempt;
@@ -219,5 +219,11 @@ public class GUIHelper {
 				}
 			}
 		}
+	}
+
+	public static void fixSize(JComponent component, Dimension size) {
+		component.setPreferredSize(size);
+		component.setMinimumSize(size);
+		component.setMaximumSize(size);
 	}
 }

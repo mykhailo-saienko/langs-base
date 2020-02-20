@@ -64,8 +64,8 @@ public class IOHelper {
 		}
 	}
 
-	public static void ensureParentDirExists(String file) throws IOException {
-		getDirPath(new File(file).getAbsoluteFile().getParent(), true);
+	public static String getParentDir(String file) {
+		return new File(file).getAbsoluteFile().getParent();
 	}
 
 	public static boolean isEmpty(String path) {
@@ -197,11 +197,19 @@ public class IOHelper {
 
 	public static void processFromFile(String path, String encoding, boolean ignoreHeader,
 			Consumer<String> lineProcessor) throws IOException {
+		// if ignore header -> the first line will be read and ignored
+		// otherwise -> don't skip the first line (i.e., set header proc to null)
+		processFromFile(path, encoding, lineProcessor, ignoreHeader ? s -> {
+		} : null);
+	}
+
+	public static void processFromFile(String path, String encoding, Consumer<String> lineProcessor,
+			Consumer<String> headerProcessor) throws IOException {
 		File file = new File(path);
 		try (BufferedReader in = new BufferedReader(
 				new InputStreamReader(new FileInputStream(file), encoding))) {
-			if (ignoreHeader) {
-				in.readLine(); // the first line is treated as header to be ignored
+			if (headerProcessor != null) {
+				headerProcessor.accept(in.readLine()); // the first line is treated as header
 			}
 			String line = null;
 			while ((line = in.readLine()) != null) {
