@@ -24,9 +24,6 @@ import java.util.function.Predicate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import ms.ipp.Algorithms;
-import ms.ipp.base.KeyValue;
-
 /**
  * @author Mykhailo Saienko
  * 
@@ -218,49 +215,6 @@ public class DateHelper {
 
 	public static Date addSecsToDate(Date date, int secs) {
 		return new Date(date.getTime() + secs * 1000);
-	}
-
-	public static Date min(boolean nullIsMin, Date date1, Date date2) {
-		if (date1 == null || date2 == null) {
-			if (nullIsMin) {
-				return null;
-			} else {
-				return date1 == null ? date2 : date1;
-			}
-		}
-		return date1.before(date2) ? date1 : date2;
-	}
-
-	public static Date min(boolean nullIsMin, Iterable<Date> dates) {
-		return Algorithms.reduce(d -> d, (d1, d2) -> min(nullIsMin, d1, d2), dates);
-	}
-
-	@SafeVarargs
-	public static <T> KeyValue<Date, T> minPair(boolean nullIsMin, Function<T, Date> transform,
-			T... elems) {
-		assert elems.length > 0 : "There must be at least one date to compare";
-		Date date = transform.apply(elems[0]);
-		int index = 0;
-		for (int i = 1; i < elems.length; ++i) {
-			date = min(nullIsMin, date, transform.apply(elems[i]));
-			index = i;
-		}
-		return KeyValue.KVP(date, elems[index]);
-	}
-
-	public static Date max(boolean nullIsMax, Date date1, Date date2) {
-		if (date1 == null || date2 == null) {
-			if (nullIsMax) {
-				return null;
-			} else {
-				return date1 == null ? date2 : date1;
-			}
-		}
-		return date1.before(date2) ? date2 : date1;
-	}
-
-	public static Date max(boolean nullIsMax, Iterable<Date> dates) {
-		return Algorithms.reduce(d -> d, (d1, d2) -> max(nullIsMax, d1, d2), dates);
 	}
 
 	public static void addTime(Date date, int hrs, int mins, int secs, long millisecs) {
