@@ -194,7 +194,7 @@ public class DateHelper {
 	}
 
 	/**
-	 * Returns number of secs between two dates
+	 * Returns the date diff date1 - date2 in terms of seconds.
 	 * 
 	 * @param date1
 	 * @param date2
