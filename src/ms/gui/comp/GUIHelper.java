@@ -13,6 +13,7 @@ import java.awt.Rectangle;
 import java.lang.reflect.InvocationTargetException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -152,7 +153,7 @@ public class GUIHelper {
 
 	public static JXDatePicker createDatePicker(Date initDate) {
 		JXDatePicker datePicker = new JXDatePicker(initDate);
-		datePicker.setPreferredSize(new Dimension(120, 26));
+		datePicker.setFormats(new SimpleDateFormat("yyyy-MM-dd"));
 		return datePicker;
 	}
 
