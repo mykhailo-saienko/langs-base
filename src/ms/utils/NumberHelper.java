@@ -258,6 +258,10 @@ public class NumberHelper {
 		return multiply(factor1, factor2, 2);
 	}
 
+	public static BigDecimal multiply(BigDecimal factor1, double factor2) {
+		return multiply(factor1, factor2, 2);
+	}
+
 	public static BigDecimal multiply(int factor1, int factor2) {
 		return multiply(new BigDecimal(factor1), new BigDecimal(factor2), 2);
 	}

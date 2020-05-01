@@ -47,8 +47,8 @@ public class TableListModel<E> extends AbstractTableModel {
 	public final void setSetters(BiConsumer<E, Object>... setters) {
 		if (setters != null && setters.length != 0) {
 			if (setters.length != getColumnCount()) {
-				throw new IllegalArgumentException(
-						"Setters must have length " + getColumnCount() + " but they have " + setters.length);
+				throw new IllegalArgumentException("Setters must have length " + getColumnCount()
+						+ " but they have " + setters.length);
 			}
 			this.setters = Arrays.asList(setters);
 		} else {
@@ -124,6 +124,11 @@ public class TableListModel<E> extends AbstractTableModel {
 		fireTableRowsInserted(getNrElements() - 1, getNrElements() - 1);
 	}
 
+	public void addAll(List<E> elems) {
+		elements.addAll(elems);
+		fireTableRowsInserted(getNrElements() - elems.size(), getNrElements() - 1);
+	}
+
 	public E get(int i) {
 		return elements.get(i);
 	}
@@ -131,6 +136,10 @@ public class TableListModel<E> extends AbstractTableModel {
 	public void remove(int row) {
 		elements.remove(row);
 		fireTableRowsDeleted(row, row);
+	}
+
+	public List<E> getValues() {
+		return elements;
 	}
 
 	public void setValues(List<E> updated) {

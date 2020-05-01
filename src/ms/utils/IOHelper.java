@@ -93,6 +93,20 @@ public class IOHelper {
 
 	}
 
+	public static String getFilestem(String path) {
+		File file = new File(path);
+		String filename = file.getName();
+		int dotIndex = filename.lastIndexOf('.');
+		return dotIndex == -1 ? filename : filename.substring(0, dotIndex);
+	}
+
+	public static String getExtension(String path) {
+		File file = new File(path);
+		String filename = file.getName();
+		int dotIndex = filename.lastIndexOf('.');
+		return dotIndex == -1 ? "" : filename.substring(dotIndex + 1);
+	}
+
 	public static boolean hasExtension(String path, String... extensions) {
 		for (String s : extensions) {
 			if (path.endsWith(s)) {

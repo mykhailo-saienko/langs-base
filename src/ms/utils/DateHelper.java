@@ -154,6 +154,19 @@ public class DateHelper {
 
 	}
 
+	public static Date get(Date source, Date time) {
+		Calendar cal = calendar.get();
+		Calendar timeCal = Calendar.getInstance(cal.getTimeZone());
+		cal.setTime(source);
+		timeCal.setTime(time);
+		cal.set(HOUR_OF_DAY, timeCal.get(HOUR_OF_DAY));
+		cal.set(MINUTE, timeCal.get(MINUTE));
+		cal.set(SECOND, timeCal.get(SECOND));
+		cal.set(MILLISECOND, timeCal.get(MILLISECOND));
+		return cal.getTime();
+
+	}
+
 	/**
 	 * 
 	 * @param year

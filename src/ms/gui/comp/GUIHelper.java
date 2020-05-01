@@ -2,6 +2,7 @@ package ms.gui.comp;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -10,6 +11,7 @@ import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Window;
 import java.lang.reflect.InvocationTargetException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
@@ -24,7 +26,9 @@ import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
 import javax.swing.JTextField;
+import javax.swing.SpinnerDateModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
@@ -110,6 +114,15 @@ public class GUIHelper {
 				+ c.fill + "}";
 	}
 
+	public static <T extends Window> T getWindowAncestor(Component c, Class<T> clazz) {
+		for (Container p = c.getParent(); p != null; p = p.getParent()) {
+			if (clazz.isInstance(p)) {
+				return clazz.cast(p);
+			}
+		}
+		return null;
+	}
+
 	public static void drawImage(JComponent component, Image image, Graphics g) {
 		Rectangle visibleRect = component.getVisibleRect();
 		int contWidth = visibleRect.width;
@@ -155,6 +168,16 @@ public class GUIHelper {
 		JXDatePicker datePicker = new JXDatePicker(initDate);
 		datePicker.setFormats(new SimpleDateFormat("yyyy-MM-dd"));
 		return datePicker;
+	}
+
+	public static JSpinner createTimeSpinner(Date initTime) {
+		JSpinner timeSpinner = new JSpinner(new SpinnerDateModel());
+		JSpinner.DateEditor timeEditor = new JSpinner.DateEditor(timeSpinner, "HH:mm:ss");
+		timeSpinner.setEditor(timeEditor);
+		timeSpinner.setValue(initTime); // will only show the current time
+		timeSpinner.setPreferredSize(new Dimension(120, 26));
+
+		return timeSpinner;
 	}
 
 	public static JTextField createTextField(boolean editable) {
