@@ -16,7 +16,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -36,6 +38,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jdesktop.swingx.JXDatePicker;
 
+import ms.ipp.Iterables;
 import ms.utils.DateHelper;
 
 public class GUIHelper {
@@ -237,8 +240,14 @@ public class GUIHelper {
 						return false;
 					}
 				} else {
-					logger.error("Unexpected error for attempt #" + attempt + " on entity '"
-							+ entity + "'. Aborting operation", e);
+					List<StackTraceElement> stackTrace = Arrays.asList(e.getStackTrace());
+					logger.error(
+							"\n-------------------------------------------------------------------\n"
+									+ "Unexpected {} for attempt #{} on entity '{}':\n{}\nStack trace:\n{}"
+									+ "\n-------------------------------------------------------------------\n",
+							e.getClass().getSimpleName(), attempt, entity, e.getMessage(),
+							Iterables.appendList(stackTrace, "\t", "", "\n\t", s -> s.toString()));
+
 					return false;
 				}
 			}
