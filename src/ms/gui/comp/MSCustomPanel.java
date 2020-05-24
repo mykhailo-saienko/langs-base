@@ -43,19 +43,57 @@ public abstract class MSCustomPanel<In, Out> extends JPanel {
 
 	private boolean created;
 
-	public MSCustomPanel(ButtonPosition position, ButtonAlignment alignment, In init, boolean readOnly) {
+	/**
+	 * An adaptor used to display {@link StatePanel} in {@link MSCustomDialog}.
+	 * Returns the last state of the StatePanel. Assumes that the StatePanel is
+	 * already fully initialized.
+	 * 
+	 * @author mykhailo.saienko
+	 *
+	 * @param <In>
+	 * @param <Out>
+	 */
+	private static class MSSyntheticCustomPanel<T> extends MSCustomPanel<T, T> {
+		private static final long serialVersionUID = -924971874468374885L;
+		private final StatePanel<T> statePanel;
+
+		public MSSyntheticCustomPanel(StatePanel<T> statePanel) {
+			super(ButtonPosition.BOTTOM, ButtonAlignment.CENTER, false);
+			this.statePanel = statePanel;
+		}
+
+		@Override
+		protected JComponent createCanvas() {
+			return statePanel;
+		}
+
+		@Override
+		protected void doUpdateGUI(T input) {
+			statePanel.setState(input);
+		}
+
+		@Override
+		protected T prepareInput() {
+			return statePanel.getState();
+		}
+	}
+
+	public static <T> MSCustomPanel<T, T> custom(StatePanel<T> panel) {
+		return new MSSyntheticCustomPanel<>(panel);
+	}
+
+	public MSCustomPanel(ButtonPosition position, ButtonAlignment alignment, In init,
+			boolean readOnly) {
 		this(position, alignment, readOnly);
 		this.lastUpdate = init;
 	}
 
 	/**
 	 * 
-	 * @param position
-	 *            gives the position of the button panel. If null, the button
-	 *            panel is not displayed.
-	 * @param alignment
-	 *            gives the default buttons' alignment within the button pannel.
-	 *            If null, the default buttons are not displayed.
+	 * @param position  gives the position of the button panel. If null, the button
+	 *                  panel is not displayed.
+	 * @param alignment gives the default buttons' alignment within the button
+	 *                  pannel. If null, the default buttons are not displayed.
 	 * @param readOnly
 	 */
 	public MSCustomPanel(ButtonPosition position, ButtonAlignment alignment, boolean readOnly) {
@@ -218,7 +256,8 @@ public abstract class MSCustomPanel<In, Out> extends JPanel {
 	}
 
 	protected Component createStrut(int measure, boolean perp) {
-		return isHorizontal(perp) ? Box.createHorizontalStrut(measure) : Box.createVerticalStrut(measure);
+		return isHorizontal(perp) ? Box.createHorizontalStrut(measure)
+				: Box.createVerticalStrut(measure);
 	}
 
 	protected Component createGlue(boolean perp) {
@@ -229,11 +268,14 @@ public abstract class MSCustomPanel<In, Out> extends JPanel {
 		JPanel dialogPanel = new JPanel();
 		dialogPanel.setBackground(getBackground());
 		dialogPanel.setLayout(new BoxLayout(dialogPanel, getAxis(true)));
-		addButtons(dialogPanel, getAlignment() == ButtonAlignment.START ? this::addDefaultButtons : this::addStart);
+		addButtons(dialogPanel,
+				getAlignment() == ButtonAlignment.START ? this::addDefaultButtons : this::addStart);
 		dialogPanel.add(createGlue(true));
-		addButtons(dialogPanel, getAlignment() == ButtonAlignment.CENTER ? this::addDefaultButtons : this::addCenter);
+		addButtons(dialogPanel, getAlignment() == ButtonAlignment.CENTER ? this::addDefaultButtons
+				: this::addCenter);
 		dialogPanel.add(createGlue(true));
-		addButtons(dialogPanel, getAlignment() == ButtonAlignment.END ? this::addDefaultButtons : this::addEnd);
+		addButtons(dialogPanel,
+				getAlignment() == ButtonAlignment.END ? this::addDefaultButtons : this::addEnd);
 		return dialogPanel;
 	}
 
@@ -261,13 +303,11 @@ public abstract class MSCustomPanel<In, Out> extends JPanel {
 	/**
 	 * Gets the axial or perpendicular direction which depends on the
 	 * ButtonPosition. For example, getAxis(true) if the button pannel is at the
-	 * bottom gives the axis perpendicular to the vertical axis (which would
-	 * result into the button panel being at the bottom), i.e. the horizontal
-	 * axis.
+	 * bottom gives the axis perpendicular to the vertical axis (which would result
+	 * into the button panel being at the bottom), i.e. the horizontal axis.
 	 * 
-	 * @param perp
-	 *            if true gives the perpendicular direction, otherwise gives the
-	 *            axial direction
+	 * @param perp if true gives the perpendicular direction, otherwise gives the
+	 *             axial direction
 	 * @return
 	 */
 	private int getAxis(boolean perp) {
