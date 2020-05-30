@@ -2,7 +2,6 @@ package ms.gui.comp;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -11,7 +10,6 @@ import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.Window;
 import java.lang.reflect.InvocationTargetException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
@@ -115,15 +113,6 @@ public class GUIHelper {
 		return "{pos=[" + c.gridx + "," + c.gridy + "], size=[" + c.gridwidth + "," + c.gridheight
 				+ "], insets=" + c.insets + ", weight=[" + c.weightx + "," + c.weighty + "], fill="
 				+ c.fill + "}";
-	}
-
-	public static <T extends Window> T getWindowAncestor(Component c, Class<T> clazz) {
-		for (Container p = c.getParent(); p != null; p = p.getParent()) {
-			if (clazz.isInstance(p)) {
-				return clazz.cast(p);
-			}
-		}
-		return null;
 	}
 
 	public static void drawImage(JComponent component, Image image, Graphics g) {
