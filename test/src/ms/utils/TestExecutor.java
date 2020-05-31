@@ -1,4 +1,6 @@
-package ms.gui;
+package ms.utils;
+
+import static java.util.Arrays.asList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,12 +8,10 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
-import ms.gui.comp.GUIHelper;
-
-public class TestGUIHelper {
+public class TestExecutor {
 
 	@Test
-	public void testExecute() {
+	public void testExecutorRun() {
 		List<String> attempts = new ArrayList<>();
 		Runnable r = () -> {
 			attempts.add("");
@@ -20,11 +20,13 @@ public class TestGUIHelper {
 			}
 		};
 
-		Assert.assertFalse(GUIHelper.execute(r, "Test", 2, i -> i));
+		var nonFatals = asList(IllegalArgumentException.class);
+		Assert.assertFalse(//
+				new Executor(r, "Test", 2).setNonFatals(nonFatals).run());
 		Assert.assertEquals(2, attempts.size());
 		attempts.clear();
 
-		Assert.assertTrue(GUIHelper.execute(r, "Test", 3, i -> i));
+		Assert.assertTrue(new Executor(r, "Test", 3).setNonFatals(nonFatals).run());
 		Assert.assertEquals(3, attempts.size());
 	}
 }
