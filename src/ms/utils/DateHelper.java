@@ -431,7 +431,9 @@ public class DateHelper {
 			target = set(target, HOUR_OF_DAY, 0);
 		}
 		if (periodType == Calendar.WEEK_OF_MONTH || periodType == Calendar.WEEK_OF_YEAR) {
-			target = set(target, Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+			// select the closest Sunday in the path/present (if it is already Sunday)
+			target = add(target, Calendar.DAY_OF_YEAR,
+					Calendar.SUNDAY - get(target, Calendar.DAY_OF_WEEK));
 		} else if (periodType == Calendar.MONTH) {
 			target = set(target, Calendar.DAY_OF_MONTH, 1);
 		} else if (periodType == Calendar.YEAR) {
