@@ -5,6 +5,7 @@ import static ms.ipp.Iterables.list;
 import static ms.ipp.Iterables.mapped;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,24 @@ import java.util.Map;
 import ms.ipp.base.KeyValue;
 
 public class StringHelper {
+
+	public static String replaceTokens(String source, Map<String, String> tokens,
+			Map<String, Integer> counts) {
+		// This approach has complexity at least N * M, where N is length of source and
+		// M is the number of tokens. If M is very high, this might become inefficient.
+		// TODO: Maybe replace this naive approach with something more elaborate
+		// https://de.wikipedia.org/wiki/String-Matching-Algorithmus#Multi-String-Matching
+		// https://github.com/robert-bor/aho-corasick
+		StringBuffer sb = new StringBuffer(source);
+		for (var e : tokens.entrySet()) {
+			int count = replaceToken(sb, e.getKey(), e.getValue());
+			if (count > 0) {
+				counts.put(e.getKey(), count);
+			}
+		}
+		return sb.toString();
+	}
+
 	/**
 	 * Replaces any occurrence of {@code tokenName} in {@code buffer} by a given
 	 * {@code tokenValue}.
@@ -194,5 +213,24 @@ public class StringHelper {
 	 */
 	public static List<String> splitQuoted(String input) {
 		return list(mapped(asList(input.split(",(?=([^\"]*\"[^\"]*\")*[^\"]*$)")), String::trim));
+	}
+
+	public static String leftAddChar(String trunk, char chr, int count) {
+		char[] chrs = new char[count];
+		Arrays.fill(chrs, chr);
+		String prefix = new String(chrs);
+		return prefix + trunk;
+	}
+
+	public static String serialize(String separator, Object... params) {
+		if (params.length == 0) {
+			return "";
+		}
+		StringBuffer buf = new StringBuffer();
+		buf.append(params[0]);
+		for (int i = 1; i < params.length; ++i) {
+			buf.append(separator).append(params[i]);
+		}
+		return buf.toString();
 	}
 }
