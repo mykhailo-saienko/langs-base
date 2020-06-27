@@ -7,6 +7,7 @@ import static ms.ipp.Iterables.mapped;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -62,6 +63,44 @@ public class StringHelper {
 	 */
 	public static List<String> makeList(String source, String regex) {
 		return (source != null) ? asList(source.split(regex)) : new ArrayList<String>();
+	}
+
+	/**
+	 * Finds the longest possible prefix with which all strings start
+	 * 
+	 * @param strings
+	 * @return
+	 */
+	public static String getCommonPrefix(Iterable<String> strings) {
+		String prefix = "";
+		Iterator<String> sIt = strings.iterator();
+		// empty iterable => return nothing
+		if (!sIt.hasNext()) {
+			return prefix;
+		}
+		// start with the first word as the prefix
+		prefix = sIt.next();
+		while (sIt.hasNext()) {
+			String s = sIt.next();
+
+			// character at i-1 is the last common character between the current prefix and
+			// the new word
+			int i = 0;
+			for (; i < Math.min(prefix.length(), s.length()); ++i) {
+				if (s.charAt(i) != prefix.charAt(i)) {
+					break;
+				}
+			}
+
+			// substring correspondingly
+			prefix = prefix.substring(0, i);
+
+			// prefix is empty => no need to iterate further
+			if (i == -1) {
+				break;
+			}
+		}
+		return prefix;
 	}
 
 	public static String quote(String source) {
@@ -212,7 +251,74 @@ public class StringHelper {
 	 * @return
 	 */
 	public static List<String> splitQuoted(String input) {
-		return list(mapped(asList(input.split(",(?=([^\"]*\"[^\"]*\")*[^\"]*$)")), String::trim));
+		String[] split = input.split(",(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
+		return list(mapped(asList(split), String::trim));
+	}
+
+	/**
+	 * Intelligently trims all whitespaces if there are any.
+	 * 
+	 * @param source
+	 * @param targetLength
+	 * @return
+	 */
+	public static String cutoff(String source, int targetLength) {
+		int delta = source.length() - targetLength;
+		// string is too short
+		if (delta <= 0) {
+			return source;
+		}
+
+		int leadingCount = 0;
+		while (source.charAt(leadingCount) == ' ' && leadingCount < source.length()) {
+			leadingCount++;
+		}
+		// edge case: the entire string is white space;
+		if (leadingCount == source.length()) {
+			// return as many white spaces as needed
+			return source.substring(0, targetLength);
+		}
+
+		int trailingCount = 0;
+		// we know that there is at least one non-white-space, so we cannot traverse all
+		// string
+		while (source.charAt(source.length() - trailingCount - 1) == ' ') {
+			trailingCount++;
+		}
+
+		int numBlanksToRestore = trailingCount + leadingCount - delta;
+		// we have cut too many blanks, restore them partially
+		if (numBlanksToRestore == 1) {
+			// we have cut 1 blank too much. First, try to remove it from right,
+			// then from left
+			if (trailingCount > 0) {
+				trailingCount--;
+			} else {
+				leadingCount--;
+			}
+		} else if (numBlanksToRestore >= 2) {
+			// try to restore one blank to the right
+			if (trailingCount > 0) {
+				trailingCount--;
+			}
+			// now, try to restore one blank to the left
+			if (leadingCount > 0) {
+				leadingCount--;
+			}
+			// we have made sure that there are at least one blank (if there were any
+			// before) around the stem. Now restore the rest
+			numBlanksToRestore = trailingCount + leadingCount - delta;
+			// if there are enough blanks to the right (to restore) -> restore them
+			if (trailingCount >= numBlanksToRestore) {
+				trailingCount -= numBlanksToRestore;
+			} else {
+				// otherwise, restore all blanks to the right, and the rest comes from the left
+				leadingCount -= (numBlanksToRestore - trailingCount);
+				trailingCount = 0;
+			}
+		}
+		// substring detects if trailingCount == leadingCount == 0.
+		return source.substring(leadingCount, source.length() - trailingCount);
 	}
 
 	public static String leftAddChar(String trunk, char chr, int count) {

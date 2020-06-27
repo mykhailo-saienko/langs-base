@@ -7,16 +7,26 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -217,17 +227,88 @@ public class IOHelper {
 		} : null);
 	}
 
-	public static void processFromFile(String path, String encoding, Consumer<String> lineProcessor,
-			Consumer<String> headerProcessor) throws IOException {
-		File file = new File(path);
-		try (BufferedReader in = new BufferedReader(
-				new InputStreamReader(new FileInputStream(file), encoding))) {
+	/**
+	 * Closes the stream passed!
+	 * 
+	 * @param stream
+	 * @param encoding
+	 * @param lineProcessor
+	 * @param headerProcessor
+	 * @throws IOException
+	 */
+	public static void processFromStream(InputStream stream, String encoding,
+			Consumer<String> lineProcessor, Consumer<String> headerProcessor) throws IOException {
+
+		try (BufferedReader in = new BufferedReader(new InputStreamReader(stream, encoding))) {
 			if (headerProcessor != null) {
 				headerProcessor.accept(in.readLine()); // the first line is treated as header
 			}
 			String line = null;
 			while ((line = in.readLine()) != null) {
 				lineProcessor.accept(line);
+			}
+		}
+	}
+
+	public static void processFromFile(String path, String encoding, Consumer<String> lineProcessor,
+			Consumer<String> headerProcessor) throws IOException {
+		File file = new File(path);
+		FileInputStream fileStream = new FileInputStream(file);
+		processFromStream(fileStream, encoding, lineProcessor, headerProcessor);
+	}
+
+	public static enum ZipAction {
+		USE, // Use current entry
+		SKIP, // Skip current entry but keep scanning the remaining ones
+		END // Don't use current entry and don't scan the remaining ones
+	}
+
+	public static void processFromZip(String zipPath, String encoding,
+			Function<String, ZipAction> decider, Consumer<String> lineProcessor,
+			Consumer<String> headerProcessor) throws IOException {
+		// NOTE: The implementation using FileSystem, although much more convenient to
+		// write, is MUCH slower! We have decided to keep this one
+		// NOTE: This implementation is ~2.5 times slower than processing files directly
+		try (ZipFile zipFile = new ZipFile(zipPath)) {
+			final Enumeration<? extends ZipEntry> entries = zipFile.entries();
+			while (entries.hasMoreElements()) {
+				ZipEntry ze = entries.nextElement();
+				ZipAction a = decider.apply(ze.getName());
+				if (a == ZipAction.USE) {
+					InputStream zinput = zipFile.getInputStream(ze);
+					processFromStream(zinput, encoding, lineProcessor, headerProcessor);
+				} else if (a == ZipAction.END) {
+					break;
+				}
+			}
+		}
+	}
+
+	public static void processFromZip(String zipPath, String encoding, Predicate<String> useDecider,
+			boolean returnOnSkip, Consumer<String> lineProcessor, Consumer<String> headerProcessor)
+			throws IOException {
+		Function<String, ZipAction> d = s -> useDecider.test(s) ? ZipAction.USE
+				: returnOnSkip ? ZipAction.END : ZipAction.SKIP;
+		processFromZip(zipPath, encoding, d, lineProcessor, headerProcessor);
+	}
+
+	public static void addFilesToZip(Iterable<String> sourceFiles,
+			Function<String, String> pathInZip, String encoding, String targetZip)
+			throws IOException {
+		Map<String, String> env = Map.of("create", "true", "encoding", encoding);
+		Path zipfile = Paths.get(targetZip);
+		URI uri = URI.create("jar:" + zipfile.toUri());
+		try (FileSystem fs = FileSystems.newFileSystem(uri, env, null)) {
+			for (String source : sourceFiles) {
+				Path externalTxtFile = Paths.get(source);
+				Path pathInZipfile = fs.getPath(pathInZip.apply(source));
+				// make sure parent directory exists
+				if (Files.notExists(pathInZipfile.getParent())) {
+					Files.createDirectories(pathInZipfile.getParent());
+				}
+
+				// copy a file into the zip file
+				Files.copy(externalTxtFile, pathInZipfile, StandardCopyOption.REPLACE_EXISTING);
 			}
 		}
 	}

@@ -42,7 +42,9 @@ public class Executor {
 	}
 
 	public <T extends Exception> Executor setFatalHandler(Class<T> fatal, Consumer<T> handler) {
-		fatalHandlers.put(fatal, e -> handler.accept(fatal.cast(e)));
+		if (fatal != null && handler != null) {
+			fatalHandlers.put(fatal, e -> handler.accept(fatal.cast(e)));
+		}
 		return this;
 	}
 
@@ -65,8 +67,8 @@ public class Executor {
 				return true;
 			} catch (Exception e) {
 				if (nonfatals.contains(e.getClass())) {
-					logger.info("Error after attempt #" + attempt + " on entity '" + entity + "': "
-							+ e.getMessage());
+					logger.info("Non-fatal " + e.getClass().getSimpleName() + " after attempt #"
+							+ attempt + " on entity '" + entity + "': " + e.getMessage());
 
 					if (attempt < attempts) {
 						int sleep = waitFor == null ? 0 : waitFor.apply(attempt);
@@ -90,7 +92,7 @@ public class Executor {
 							Iterables.appendList(stackTrace, "\t", "", "\n\t", s -> s.toString()));
 					Consumer<Exception> handler = fatalHandlers.get(e.getClass());
 					if (handler != null) {
-						logger.debug("Execution special handler for {}", e.getClass());
+						logger.trace("Execution special handler for {}", e.getClass());
 						handler.accept(e);
 					}
 					return false;

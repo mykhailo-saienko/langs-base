@@ -54,18 +54,23 @@ public class DateHelper {
 		return TimeZone.getDefault();
 	}
 
-	static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
-
+	static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd HH:mm";
 	static final ThreadLocal<SimpleDateFormat> DATETIME_FORMAT = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected SimpleDateFormat initialValue() {
-			return new SimpleDateFormat(DEFAULT_DATE_FORMAT, getLocale());
+			return new SimpleDateFormat(DEFAULT_DATE_FORMAT + ":ss", getLocale());
 		};
 	};
 	static final ThreadLocal<SimpleDateFormat> DATETIME_FORMAT_ALL = new ThreadLocal<SimpleDateFormat>() {
 		@Override
 		protected SimpleDateFormat initialValue() {
-			return new SimpleDateFormat(DEFAULT_DATE_FORMAT + ".SSS", getLocale());
+			return new SimpleDateFormat(DEFAULT_DATE_FORMAT + ":ss.SSS", getLocale());
+		};
+	};
+	static final ThreadLocal<SimpleDateFormat> DATETIME_FORMAT_MINS = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected SimpleDateFormat initialValue() {
+			return new SimpleDateFormat(DEFAULT_DATE_FORMAT, getLocale());
 		};
 	};
 	static final ThreadLocal<SimpleDateFormat> DATE_FORMAT = new ThreadLocal<SimpleDateFormat>() {
@@ -256,6 +261,10 @@ public class DateHelper {
 
 	public static final String getNowString() {
 		return format(getNow());
+	}
+
+	public static final String formatMins(Date date) {
+		return date == null ? null : DATETIME_FORMAT_MINS.get().format(date);
 	}
 
 	public static final String format(Date date) {
