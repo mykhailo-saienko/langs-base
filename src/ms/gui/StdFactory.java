@@ -104,7 +104,7 @@ public abstract class StdFactory<T> implements TFactory {
 		deferredProducers.put(tag, producer);
 	}
 
-	public void register(String tag, Prefinalizer<T> processor) {
+	public void registerPP(String tag, Prefinalizer<T> processor) {
 		prefinalizers.getInsert(tag, ArrayList::new).add(processor);
 	}
 
