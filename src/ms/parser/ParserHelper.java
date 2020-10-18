@@ -26,8 +26,19 @@ public class ParserHelper {
     public static <T extends Parser> T getParser(String source,
                                                  Function<CharStream, Lexer> lexer,
                                                  Function<TokenStream, T> generator) {
+        return getParser(source, lexer, generator, false);
+    }
+
+    public static <T extends Parser> T getParser(String source,
+                                                 Function<CharStream, Lexer> lexer,
+                                                 Function<TokenStream, T> generator,
+                                                 boolean deactivateLexerErrors) {
         CodePointCharStream charStream = CharStreams.fromString(source);
-        CommonTokenStream tokens = new CommonTokenStream(lexer.apply(charStream));
+        Lexer realLexer = lexer.apply(charStream);
+        if (deactivateLexerErrors) {
+            realLexer.removeErrorListeners();
+        }
+        CommonTokenStream tokens = new CommonTokenStream(realLexer);
         T parser = generator.apply(tokens);
         // insert the error-listener which collects errors into a list
         parser.removeErrorListeners();

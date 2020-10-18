@@ -3,6 +3,7 @@ package ms.utils;
 import static java.util.Arrays.asList;
 import static ms.ipp.Iterables.list;
 import static ms.ipp.Iterables.mapped;
+import static ms.utils.NumberHelper.price;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -339,5 +340,9 @@ public class StringHelper {
             buf.append(separator).append(params[i]);
         }
         return buf.toString();
+    }
+
+    public static String alignNumber(Number number) {
+        return String.format("%1$9s", number == null ? "-" : price(number.doubleValue()));
     }
 }
