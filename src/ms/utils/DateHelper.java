@@ -452,7 +452,14 @@ public class DateHelper {
         }
         if (periodType == Calendar.WEEK_OF_MONTH || periodType == Calendar.WEEK_OF_YEAR) {
             // select the closest Sunday in the past/present (if it is already Sunday)
-            target = set(target, Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+            Date potentialTarget = set(target, Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+            // some Timezones start their weeks with Monday, so setting "Sunday" would catapult them
+            // in the future (as this is the last rather than the first day of the week). In this
+            // case, we need to go back a week.
+            if (potentialTarget.after(target)) {
+                potentialTarget = DateHelper.add(potentialTarget, Calendar.WEEK_OF_YEAR, -1);
+            }
+            target = potentialTarget;
         } else if (periodType == Calendar.MONTH) {
             target = set(target, Calendar.DAY_OF_MONTH, 1);
         } else if (periodType == Calendar.YEAR) {
