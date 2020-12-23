@@ -1,8 +1,7 @@
 package ms.utils;
 
 import static java.util.Arrays.asList;
-import static ms.ipp.Iterables.list;
-import static ms.ipp.Iterables.mapped;
+import static ms.ipp.Iterables.map;
 import static ms.utils.NumberHelper.price;
 
 import java.util.ArrayList;
@@ -11,10 +10,20 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import ms.ipp.base.KeyValue;
 
 public class StringHelper {
+
+    /**
+     * Use this as a comma separator if the commas within quoted string should be ignored.<br>
+     * For example, <br>
+     * If `a,"b, c",d` should be split into 1) a, 2) "b, c", 3) d.
+     * 
+     * It uses positive lookahead to achieve this effect.
+     */
+    public static final String NON_QUOTED_COMMA = ",(?=([^\"]*\"[^\"]*\")*[^\"]*$)";
 
     public static String replaceTokens(String source,
                                        Map<String, ?> tokens,
@@ -246,15 +255,15 @@ public class StringHelper {
         return source.replaceAll("^\\s+", "").replaceAll("\\s+$", "");
     }
 
-    /**
-     * Split by commas, using positive non-matching lookahead for non-quoted and quoted strings
-     * 
-     * @param input
-     * @return
-     */
-    public static List<String> splitQuoted(String input) {
-        String[] split = input.split(",(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
-        return list(mapped(asList(split), String::trim));
+    public static <T> List<T> splitTrimParse(String source, Function<String, T> parser) {
+        Function<String, String> trimmer = StringHelper::ultimateTrim;
+        return source == null || source.isEmpty() ? null
+                : map(asList(source.split(",")), trimmer.andThen(parser));
+    }
+
+    public static List<String> splitTrim(String source, String sep) {
+        return source == null || source.isEmpty() ? null
+                : map(asList(source.split(sep)), StringHelper::ultimateTrim);
     }
 
     /**

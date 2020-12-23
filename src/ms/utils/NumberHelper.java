@@ -46,20 +46,20 @@ public class NumberHelper {
         return getQtyFormat().parse(qtyText).intValue();
     }
 
-    public static synchronized BigDecimal safeParse(String numberText) {
+    public static synchronized BigDecimal safeParse(String numberText, NumberFormat format) {
         try {
-            return parse(numberText);
+            return (BigDecimal) format.parse(numberText);
         } catch (ParseException e) {
             throw new IllegalArgumentException(e);
         }
     }
 
+    public static synchronized BigDecimal safeParse(String numberText) {
+        return safeParse(numberText, getGeneralFormat());
+    }
+
     public static synchronized BigDecimal safeParsePrice(String priceText) {
-        try {
-            return parsePrice(priceText);
-        } catch (ParseException e) {
-            throw new IllegalArgumentException(e);
-        }
+        return safeParse(priceText, getPriceFormat());
     }
 
     public static synchronized int safeParseQuantity(String qtyText) {
