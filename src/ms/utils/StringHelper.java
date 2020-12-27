@@ -262,8 +262,9 @@ public class StringHelper {
     }
 
     public static List<String> splitTrim(String source, String sep) {
+        // we always keep empty fields, hence -1 in the split
         return source == null || source.isEmpty() ? null
-                : map(asList(source.split(sep)), StringHelper::ultimateTrim);
+                : map(asList(source.split(sep, -1)), StringHelper::ultimateTrim);
     }
 
     /**
