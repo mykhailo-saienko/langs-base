@@ -511,7 +511,6 @@ public class DateHelper {
         }
 
         while (!date.after(end)) {
-
             Date from = date;
             date = add(from, type, number);
             task.accept(from, date);

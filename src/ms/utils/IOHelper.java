@@ -158,19 +158,49 @@ public class IOHelper {
                 .forEach(File::delete);
     }
 
+    public static enum PromptType {
+        OPEN_FILE(JFileChooser.OPEN_DIALOG, false), //
+        SAVE_FILE(JFileChooser.SAVE_DIALOG, false), //
+        OPEN_DIRECTORY(JFileChooser.OPEN_DIALOG, true);
+
+        private PromptType(int fileChooserType, boolean directoriesOnly) {
+            this.fileChooserType = fileChooserType;
+            this.directoriesOnly = directoriesOnly;
+        }
+
+        public int getFileChooserType() {
+            return fileChooserType;
+        }
+
+        public boolean isDirectoriesOnly() {
+            return directoriesOnly;
+        }
+
+        private final boolean directoriesOnly;
+        private final int fileChooserType;
+    }
+
     public static File promptFile(String curDir,
                                   Container parent,
-                                  int type,
+                                  PromptType type,
                                   boolean promptIfExists,
                                   String filterDesc,
                                   String... filter) {
         List<String> filters = Arrays.asList(filter);
-        if (filters.isEmpty()) {
-            throw new IllegalArgumentException("At least one filter must be specified for the file chooser");
-        }
+
         final JFileChooser fc = new JFileChooser();
-        fc.addChoosableFileFilter(new FileNameExtensionFilter(filterDesc, filter));
-        fc.setFileFilter(fc.getChoosableFileFilters()[1]);
+        fc.setDialogType(type.getFileChooserType());
+
+        if (!type.isDirectoriesOnly()) {
+            if (filters.isEmpty()) {
+                throw new IllegalArgumentException("At least one filter must be specified for the file chooser");
+            }
+            fc.addChoosableFileFilter(new FileNameExtensionFilter(filterDesc, filter));
+            fc.setFileFilter(fc.getChoosableFileFilters()[1]);
+        } else {
+            fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            fc.setAcceptAllFileFilterUsed(false);
+        }
 
         File f = new File(curDir);
         if (f.exists()) {
@@ -179,7 +209,6 @@ public class IOHelper {
             fc.setCurrentDirectory(new File("."));
         }
 
-        fc.setDialogType(type);
         if (fc.showDialog(parent, null) == JFileChooser.APPROVE_OPTION) {
             File file = fc.getSelectedFile();
             String path = file.getPath();
@@ -200,6 +229,17 @@ public class IOHelper {
         } else {
             return null;
         }
+    }
+
+    public static File promptFile(String curDir,
+                                  Container parent,
+                                  int type,
+                                  boolean promptIfExists,
+                                  String filterDesc,
+                                  String... filter) {
+        PromptType promptType
+                = type == JFileChooser.OPEN_DIALOG ? PromptType.OPEN_FILE : PromptType.SAVE_FILE;
+        return promptFile(curDir, parent, promptType, promptIfExists, filterDesc, filter);
     }
 
     public static String loadFromFile(String path) throws IOException {
