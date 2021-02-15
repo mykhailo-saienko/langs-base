@@ -352,7 +352,15 @@ public class StringHelper {
         return buf.toString();
     }
 
-    public static String alignNumber(Number number) {
+    public static String alignNumberRight(Number number) {
         return String.format("%1$9s", number == null ? "-" : price(number.doubleValue()));
+    }
+
+    public static String alignNumberLeft(Number number) {
+        return String.format("%1$-9s", number == null ? "-" : price(number.doubleValue()));
+    }
+
+    public static String alignLeft(String content, int length) {
+        return String.format("%1$-" + length + "s", content);
     }
 }
