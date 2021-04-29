@@ -4,6 +4,8 @@ import static java.util.Arrays.asList;
 import static ms.ipp.Iterables.map;
 import static ms.utils.NumberHelper.price;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -350,6 +352,13 @@ public class StringHelper {
             buf.append(separator).append(params[i]);
         }
         return buf.toString();
+    }
+
+    public static InputStream toStream(String input) {
+        if (input == null) {
+            throw new IllegalArgumentException("Input string cannot be null");
+        }
+        return new ByteArrayInputStream(input.getBytes());
     }
 
     public static String alignNumberRight(Number number) {

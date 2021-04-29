@@ -99,9 +99,8 @@ public class IOHelper {
         if (lib.exists() && lib.isDirectory()) {
             return lib.listFiles((f, s) -> hasExtension(s, extensions) && f.equals(lib));
         }
-        throw new IOException("Library folder " + lib.getAbsolutePath()
+        throw new IOException("Folder " + lib.getAbsolutePath()
                               + " does not exist or is not a directory. Ignoring...");
-
     }
 
     public static String getFilestem(String path) {
@@ -282,7 +281,9 @@ public class IOHelper {
      * @param stream
      * @param encoding
      * @param lineProcessor
-     * @param headerProcessor
+     * @param headerProcessor The first line processor. If null, the first line will not be
+     *                        interpreted as a header and will be passed directly to the
+     *                        lineProcessor.
      * @throws IOException
      */
     public static void processFromStream(InputStream stream,
