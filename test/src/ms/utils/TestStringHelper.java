@@ -76,8 +76,10 @@ public class TestStringHelper {
                                                        splitTrim(p.getKey(), NON_QUOTED_COMMA))));
     }
 
-    private static List<KeyValue<String, List<String>>> splitCases
-            = asList(KVP("a,b", asList("a", "b")), // standard
+    private static List<KeyValue<String, List<String>>> splitCases //
+            = asList(KVP("", asList()), // empty
+                     KVP(" ", asList()), // blank
+                     KVP("a,b", asList("a", "b")), // standard
                      KVP("a,\"b,c\"", asList("a", "\"b,c\"")), // quotes
                      KVP("a,", asList("a", "")), // empty field
                      KVP("a,,", asList("a", "", "")), // two empty fields (end)

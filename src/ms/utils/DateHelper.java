@@ -94,6 +94,16 @@ public class DateHelper {
         return LOCALE;
     }
 
+    /**
+     * A memory optimized version of {@link #getNow()}. It doesn't create a new Date.
+     * 
+     * @param date
+     */
+    public static final void setToNow(Date date) {
+        calendar.get().setTimeInMillis(currentTimeMillis());
+        date.setTime(calendar.get().getTimeInMillis());
+    }
+
     public static final Date getNow() {
         calendar.get().setTimeInMillis(currentTimeMillis());
         return calendar.get().getTime();
